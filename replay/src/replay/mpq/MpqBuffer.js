@@ -120,8 +120,31 @@ export default class MpqBuffer {
     }
   }
 
-  skipToByte() {
+  skip(bytes) {
+    this.index += bytes;
     this.nextBits = 0;
+  }
+
+  seek(data) {
+    for (let bufferIndex = this.index; bufferIndex < this.buffer.length; bufferIndex++) {
+      let isMatching = true;
+
+      for (let dataIndex = 0; dataIndex < data.length; dataIndex++) {
+        const byte = this.buffer.readUInt8(bufferIndex + dataIndex);
+
+        if (byte !== data[dataIndex]) {
+          isMatching = false;
+          break;
+        }
+      }
+
+      if (isMatching) {
+        this.index = bufferIndex;
+        return true;
+      }
+    }
+
+    return false;
   }
 
   toString(encoding, start, end) {

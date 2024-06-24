@@ -31,7 +31,7 @@ function readGameEvent(game, decoder) {
     console.log("Unsupported type for game event:", type);
   }
 
-  decoder.skipToByte();
+  decoder.skip(0);
 }
 
 function readSelectionEvent(decoder, selection) {

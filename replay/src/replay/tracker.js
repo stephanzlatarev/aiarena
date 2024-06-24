@@ -1,13 +1,9 @@
 import Unit from "./unit.js";
 
 export default function readTrackerEvents(replay, decoder) {
-  const bytes = [];
+  while (!decoder.done() && decoder.seek([0x03, 0x00])) {
+    decoder.skip(2); // 03 00
 
-  decoder.readBits(8 * 2); // 03 00
-
-  // TODO: Seek to next 03 00 sequence
-
-  while (!decoder.done()) {
     const frames = decoder.read();
     const type = decoder.read();
     const data = decoder.read();
@@ -16,15 +12,6 @@ export default function readTrackerEvents(replay, decoder) {
       handleUnitBornEvent(replay, data);
     } else if (type === 9) {
       console.log(getPlayerSetupEvent(data));
-    }
-
-    while (!decoder.done()) {
-      bytes.push(decoder.readBits(8));
-
-      if (bytes.slice(bytes.length - 2).join(" ") === "3 0") {
-        bytes.length = 0;
-        break;
-      }
     }
   }
 }
