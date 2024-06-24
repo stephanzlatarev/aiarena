@@ -1,0 +1,11 @@
+{
+  "name": "aiarena-replay",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node ./src/start.js"
+  },
+  "dependencies": {
+    "seek-bzip": "^2.0.0"
+  }
+}
