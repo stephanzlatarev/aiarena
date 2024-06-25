@@ -87,7 +87,7 @@ export default class MpqBuffer {
 
   readInt(bytes) {
     if (bytes) {
-      let result = this.next >> this.nextBits;
+      let result = this.next & MASK[this.nextBits];
       let bits = bytes - this.nextBits;
 
       while (bits > 0) {
@@ -100,23 +100,27 @@ export default class MpqBuffer {
         } else {
           result <<= bits;
           result |= (this.next & MASK[bits]);
+          this.next >>= bits;
           bits = 0;
-          this.next >>= (8 - this.nextBits);
         }
       }
 
       return result;
     } else {
-      // Reads a signed integer of variable length
-      // Code from https://github.com/ascendedguard/sc2replay-csharp
-      let l2 = 0;
-      for (let k = 0;; k += 7) {
-        let l1 = this.readBits(8);
-        l2 = (l2 | (l1 & 0x7F) << k) >>> 0;
-        if ((l1 & 0x80) === 0) {
-          return ((l2 & 1) >>> 0 > 0 ? -(l2 >>> 1) : l2 >>> 1);
-        }
+      let byte = this.buffer.readUInt8(this.index++);
+      const isNegative = (byte & 0x01);
+      let result = (byte & 0x7F) >> 1;
+      let bits = 6;
+
+      while (byte & 0x80) {
+        byte = this.buffer.readUInt8(this.index++);
+        result |= (byte & 0x7F) << bits;
+        bits += 7;
       }
+
+      this.nextBits = 0;
+
+      return isNegative ? -result : result;
     }
   }
 
@@ -125,20 +129,15 @@ export default class MpqBuffer {
     this.nextBits = 0;
   }
 
-  seek(data) {
-    for (let bufferIndex = this.index; bufferIndex < this.buffer.length; bufferIndex++) {
-      let isMatching = true;
+  seek(isMatching, length) {
+    for (let bufferIndex = this.index; bufferIndex < this.buffer.length - length; bufferIndex++) {
+      const data = [];
 
-      for (let dataIndex = 0; dataIndex < data.length; dataIndex++) {
-        const byte = this.buffer.readUInt8(bufferIndex + dataIndex);
-
-        if (byte !== data[dataIndex]) {
-          isMatching = false;
-          break;
-        }
+      for (let dataIndex = 0; dataIndex < length; dataIndex++) {
+        data.push(this.buffer.readUInt8(bufferIndex + dataIndex));
       }
 
-      if (isMatching) {
+      if (isMatching(...data)) {
         this.index = bufferIndex;
         return true;
       }

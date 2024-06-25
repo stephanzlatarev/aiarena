@@ -1,40 +1,77 @@
+import command from "./ability.js";
+import Event from "./event.js";
 
 export default function readGameEvents(replay, decoder) {
   const game = {
-    loop: 0,
-    selection: [new Set(), new Set()],
+    loop: undefined,
+    selection: [null, null],
   }
 
-  decoder.index = 230*14 + 5;
-  game.loop = 5;
-
-  readGameEvent(game, decoder);
-  readGameEvent(game, decoder);
-  readGameEvent(game, decoder);
-  readGameEvent(game, decoder);
+  while (decoder.seek(isSupportedEvent, 2)) {
+    readGameEvent(replay, game, decoder);
+    decoder.skip(0);
+  }
 }
 
-function readGameEvent(game, decoder) {
+function isSupportedEvent(frames, pidAndType) {
+  // This implementation accepts only events with one byte frames delta!
+  if ((frames & 0x03) !== 0) return false;
+
+  const pid = (pidAndType & 0b00011111);
+  return ((pid === 0) || (pid === 1));
+}
+
+function readGameEvent(replay, game, decoder) {
   const frames = readFrames(decoder);
   const pid = decoder.readBits(5);
   const type = decoder.readBits(7);
 
-  game.loop += frames;
-
-  console.log("========= loop:", game.loop, "pid:", pid, "type:", type);
-
-  if (type === 27) {
-    readCommandEvent(decoder);
-  } else if (type === 28) {
-    readSelectionEvent(decoder, game.selection[pid]);
-  } else {
-    console.log("Unsupported type for game event:", type);
+  if (game.loop === undefined) {
+    if ((type === 25) || (type === 27) || (type === 28) || (type === 103) || (type === 104) || (type === 105)) {
+      game.loop = frames;
+    }
+  } else if (type > 2) {
+    game.loop += frames;
   }
 
-  decoder.skip(0);
+  if (type === 25) {
+    readManagerResetEvent(decoder);
+  } else if (type === 27) {
+    const effect = readCommandEvent(replay, decoder);
+
+    if (effect) {
+      effect.apply(game.loop, pid + 1, game.selection[pid]);
+
+      const unit = game.selection[pid];
+      const event = new Event({
+        loop: game.loop,
+        player: pid + 1,
+        unit: unit ? unit.type + " " + unit.id : "???",
+        ability: effect.ability,
+        target: effect.target ? effect.target.type + " " + effect.target.id : null,
+        output: effect.output,
+        loop: game.loop,
+      });
+      console.log(event.toString());
+    }
+  } else if (type === 28) {
+    const selection = readSelectionEvent(replay, decoder);
+
+    if (selection) {
+      game.selection[pid] = selection;
+    }
+  } else if (type === 103) {
+    readManagerStateEvent(decoder);
+  } else if (type === 104) {
+    readUpdateTargetPointEvent(decoder);
+  } else if (type === 105) {
+    readUpdateTargetEvent(decoder);
+  }
 }
 
-function readSelectionEvent(decoder, selection) {
+function readSelectionEvent(replay, decoder) {
+  let selection = null;
+
   decoder.readBits(4);
   decoder.readBits(9);
 
@@ -43,56 +80,53 @@ function readSelectionEvent(decoder, selection) {
       break;
     }
     case 1: {
-      console.log("TODO: Implement remove items from selection");
+      const maskLength = decoder.readBits(8);
+      decoder.readBits(maskLength);
       break;
     }
-    case 2: {
-      console.log("TODO: Implement remove items from selection");
-      break;
-    }
-    case 3: {
-      console.log("TODO: Implement remove items from selection");
-      const count = decoder.readBits(9);
-      console.log("remove", count, "items from selection");
-      for (let i = 0; i < count; i++) {
-        const item = decoder.readBits(9);
-        console.log("remove ZeroIndices", item);
+    default: {
+      const indexCount = decoder.readBits(9);
+      for (let i = 0; i < indexCount; i++) {
+        decoder.readBits(9);
       }
-      break;
     }
   }
 
   const subgroupsCount = decoder.readBits(9);
-  console.log("add", subgroupsCount, "subgroups to selection");
   for (let i = 0; i < subgroupsCount; i++) {
-    const unitLink = decoder.readInt(16);
-    const subgroupPriority = decoder.readInt(8);
-    const intraSubgroupPriority = decoder.readInt(8);
-    const count = decoder.readBits(9);
-    console.log("subgroup:", unitLink, subgroupPriority, intraSubgroupPriority, count);
+    decoder.readInt(16);
+    decoder.readInt(8);
+    decoder.readInt(8);
+    decoder.readBits(9);
   }
 
   const unitTagsCount = decoder.readBits(9);
-  console.log("add", unitTagsCount, "unit tags to selection");
   for (let i = 0; i < unitTagsCount; i++) {
     const unitTag = decoder.readInt(32);
-    console.log("unit tag:", unitTag);
-    selection.add(unitTag);
+
+    if (unitTag) {
+      selection = replay.units.get(unitTag);
+    } else {
+      console.log("Unknown unit tag:", unitTag);
+    }
   }
+
+  return selection;
 }
 
-function readCommandEvent(decoder) {
-  const flags = readFlags(decoder.readBits(26));
-  console.log("flags:", flags);
+function readCommandEvent(replay, decoder) {
+  let effect = null;
+
+  // Read the flags and ignore them
+  // Maybe later we'd like to track smart clicks and queued commands but not yet
+  decoder.readBits(26);
 
   if (decoder.readBits(1)) {
-    console.log("has ability!");
-
     const abilityLink = decoder.readInt(16);
     const abilityCommandIndex = decoder.readBits(5);
     const abilityCommandData = decoder.readBits(1) ? decoder.readInt(8) : null;
 
-    console.log("ability:", abilityLink, abilityCommandIndex, abilityCommandData);
+    effect = command(abilityLink, abilityCommandIndex, abilityCommandData);
   }
 
   switch (decoder.readBits(2)) {
@@ -100,71 +134,90 @@ function readCommandEvent(decoder) {
       break;
     }
     case 1: {
-      console.log("TODO: Implement target 1");
+      // Read coordinates x, y, z of the target position and ignore them
+      decoder.readBits(20);
+      decoder.readBits(20);
+      decoder.readInt(32);
       break;
     }
     case 2: {
-      console.log("TODO: Implement target 2");
+      // Read the target flags, timer and ignore them
+      decoder.readInt(16);
+      decoder.readInt(8);
+
+      const unitTag = decoder.readInt(32);
+
+      // Read the unit link, control and upkeep player and ignore them
+      decoder.readInt(16);
+      if (decoder.readBits(1)) decoder.readBits(4);
+      if (decoder.readBits(1)) decoder.readBits(4);
+
+      // Read coordinates x, y, z of the target unit and ignore them
+      decoder.readBits(20);
+      decoder.readBits(20);
+      decoder.readInt(32);
+
+      if (effect) effect.target = replay.units.get(unitTag);
       break;
     }
     case 3: {
-      console.log("TODO: Implement target 3");
+      // Read the target data and ignore it
+      decoder.readInt(32);
       break;
     }
   }
-  const sequence = decoder.readInt(32) + 1;
-  console.log("sequence:", sequence);
 
-  if (decoder.readBits(1)) {
-    const otherUnitTag = decoder.readInt(32);
-    console.log("other unit tag:", otherUnitTag);
-  }
+  // Read the sequence order of this command and ignore it
+  decoder.readInt(32);
 
-  if (decoder.readBits(1)) {
-    const unitGroup = decoder.readInt(32);
-    console.log("unit group:", unitGroup);
-  }
+  // Read any other unit tag and ignore it
+  if (decoder.readBits(1)) decoder.readInt(32);
+
+  // Read any unit group and ignore it
+  if (decoder.readBits(1)) decoder.readInt(32);
+
+  return effect;
+}
+
+function readManagerResetEvent(decoder) {
+  decoder.readInt(32);
+}
+
+function readManagerStateEvent(decoder) {
+  decoder.readBits(2);
+  if (decoder.readBits(1)) decoder.readInt(32);
+}
+
+function readUpdateTargetPointEvent(decoder) {
+  decoder.readBits(20);
+  decoder.readBits(20);
+  decoder.readBits(32);
+}
+
+function readUpdateTargetEvent(decoder) {
+  decoder.readInt(16);
+  decoder.readInt(8);
+  decoder.readInt(32);
+  decoder.readInt(16);
+  if (decoder.readBits(1)) decoder.readBits(4);
+  if (decoder.readBits(1)) decoder.readBits(4);
+  decoder.readBits(20);
+  decoder.readBits(20);
+  decoder.readBits(32);
 }
 
 function readFrames(decoder) {
-  const byte = decoder.readBits(8);
+  const byte = decoder.readInt(8);
   const time = byte >> 2;
   const additional = byte & 0x03;
 
   if (additional === 0) {
     return time;
   } else if (additional === 1) {
-    return time << 8 | decoder.readBits(8);
+    return time << 8 | decoder.readInt(8);
   } else if (additional === 2) {
-    return time << 16 | decoder.readBits(16);
+    return time << 16 | decoder.readInt(16);
   } else if (additional === 3) {
-    return time << 24 | decoder.readBits(16) << 8 | decoder.readBits(8);
+    return time << 24 | decoder.readInt(16) << 8 | decoder.readInt(8);
   }
-}
-
-function readFlags(flags) {
-  const list = [];
-
-  if (0x1 & flags) list.push("alternate");
-  if (0x2 & flags) list.push("queued");
-  if (0x4 & flags) list.push("preempt");
-  if (0x8 & flags) list.push("smart_click");
-  if (0x10 & flags) list.push("smart_rally");
-  if (0x20 & flags) list.push("subgroup");
-  if (0x40 & flags) list.push("set_autocast");
-  if (0x80 & flags) list.push("set_autocast_on");
-  if (0x100 & flags) list.push("user");
-  if (0x200 & flags) list.push("data_passenger");
-  if (0x400 & flags) list.push("data_abil_queue_order_id");
-  if (0x800 & flags) list.push("ai");
-  if (0x1000 & flags) list.push("ai_ignore_on_finish");
-  if (0x2000 & flags) list.push("is_order");
-  if (0x4000 & flags) list.push("script");
-  if (0x8000 & flags) list.push("homogenous_interruption");
-  if (0x10000 & flags) list.push("minimap");
-  if (0x20000 & flags) list.push("repeat");
-  if (0x40000 & flags) list.push("dispatch_to_other_unit");
-  if (0x80000 & flags) list.push("target_self");
-
-  return list;
 }

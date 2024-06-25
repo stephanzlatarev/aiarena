@@ -9,4 +9,7 @@ export default class Unit {
     this.y = y;
   }
 
+  toString() {
+    return this.type + " " + this.id;
+  }
 }
