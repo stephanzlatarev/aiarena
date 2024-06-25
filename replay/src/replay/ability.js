@@ -1,106 +1,79 @@
+import Event from "./event.js";
 
 class Effect {
 
-  loop = 0;
-  player = 0;
-  unit = null;
-  target = null;
-
-  constructor(ability, output) {
-    this.ability = ability;
-    this.output = output;
+  constructor(type, out) {
+    this.type = type;
+    this.out = out;
   }
 
-  clone() {
-    const effect = new Effect(this.ability, this.output);
-    effect.apply(this.loop, this.player, this.unit);
-    effect.target = this.target;
-    return effect;
-  }
-
-  apply(loop, player, unit) {
-    this.loop = loop;
-    this.player = player;
-    this.unit = unit;
-  }
-
-  toString() {
-    const text = [];
-
-    text.push("Player");
-    text.push(this.player);
-    text.push(this.unit ? this.unit.toString() : "???");
-    text.push(this.ability);
-
-    if (this.output) text.push(this.output);
-    if (this.target) text.push(this.target);
-
-    return text.join(" ");
+  toEvent(loop, pid, stype, sid, ttype, tid) {
+    return new Event(this.type, loop, pid, stype, sid, ttype, tid, this.out);
   }
 
 }
 
 const EFFECTS = {
-  17000: new Effect("build", "Nexus"),
-  17001: new Effect("build", "Pylon"),
-  17002: new Effect("build", "Assimilator"),
-  17003: new Effect("build", "Gateway"),
-  17004: new Effect("build", "Forge"),
-  17005: new Effect("build", "FleetBeacon"),
-  17006: new Effect("build", "TwilightCouncil"),
-  17007: new Effect("build", "PhotonCannon"),
-  17009: new Effect("build", "Stargate"),
-  17010: new Effect("build", "TemplarArchive"),
-  17011: new Effect("build", "DarkShrine"),
-  17012: new Effect("build", "RoboticsBay"),
-  17013: new Effect("build", "RoboticsFacility"),
-  17014: new Effect("build", "CyberneticsCore"),
-  17015: new Effect("build", "ShieldBattery"),
-  17200: new Effect("build", "Zealot"),
-  17201: new Effect("build", "Stalker"),
-  17203: new Effect("build", "HighTemplar"),
-  17204: new Effect("build", "DarkTemplar"),
-  17205: new Effect("build", "Sentry"),
-  17206: new Effect("build", "Adept"),
-  17300: new Effect("build", "Phoenix"),
-  17301: new Effect("build", "Carrier"),
-  17302: new Effect("build", "Carrier"),
-  17304: new Effect("build", "VoidRay"),
-  17308: new Effect("build", "Oracle"),
-  17309: new Effect("build", "Tempest"),
-  17400: new Effect("build", "WarpPrism"),
-  17401: new Effect("build", "Observer"),
-  17402: new Effect("build", "Colossus"),
-  17403: new Effect("build", "Immortal"),
-  17500: new Effect("build", "Probe"),
-  18000: new Effect("research", "GroundWeapons1"),
-  18001: new Effect("research", "GroundWeapons2"),
-  18002: new Effect("research", "GroundWeapons3"),
-  18003: new Effect("research", "GroundArmor1"),
-  18004: new Effect("research", "GroundArmor2"),
-  18005: new Effect("research", "GroundArmor3"),
-  18006: new Effect("research", "Shields1"),
-  18007: new Effect("research", "Shields2"),
-  18008: new Effect("research", "Shields3"),
-  21400: new Effect("build", "Zealot"),
-  21401: new Effect("build", "Stalker"),
-  21403: new Effect("build", "HighTemplar"),
-  21404: new Effect("build", "DarkTemplar"),
-  21405: new Effect("build", "Sentry"),
-  21406: new Effect("build", "Adept"),
-  22800: new Effect("transform", "TransformToWarpGate"),
-  22801: new Effect("transform", "CancelTransformToWarpGate "),
-  23600: new Effect("research", "AirWeapons1"),
-  23601: new Effect("research", "AirWeapons2"),
-  23602: new Effect("research", "AirWeapons3"),
-  23603: new Effect("research", "AirArmor1"),
-  23604: new Effect("research", "AirArmor2"),
-  23605: new Effect("research", "AirArmor3"),
-  23606: new Effect("research", "WarpGate"),
-  23700: new Effect("research", "Charge"),
-  23701: new Effect("research", "Blink"),
-  23702: new Effect("research", "AdeptPiercingAttack"),
-  71600: new Effect("chronoboost"),       // Game version 76114
+  17000: new Effect(Event.Make, "Nexus"),
+  17001: new Effect(Event.Make, "Pylon"),
+  17002: new Effect(Event.Make, "Assimilator"),
+  17003: new Effect(Event.Make, "Gateway"),
+  17004: new Effect(Event.Make, "Forge"),
+  17005: new Effect(Event.Make, "FleetBeacon"),
+  17006: new Effect(Event.Make, "TwilightCouncil"),
+  17007: new Effect(Event.Make, "PhotonCannon"),
+  17009: new Effect(Event.Make, "Stargate"),
+  17010: new Effect(Event.Make, "TemplarArchive"),
+  17011: new Effect(Event.Make, "DarkShrine"),
+  17012: new Effect(Event.Make, "RoboticsBay"),
+  17013: new Effect(Event.Make, "RoboticsFacility"),
+  17014: new Effect(Event.Make, "CyberneticsCore"),
+  17015: new Effect(Event.Make, "ShieldBattery"),
+  17200: new Effect(Event.Make, "Zealot"),
+  17201: new Effect(Event.Make, "Stalker"),
+  17203: new Effect(Event.Make, "HighTemplar"),
+  17204: new Effect(Event.Make, "DarkTemplar"),
+  17205: new Effect(Event.Make, "Sentry"),
+  17206: new Effect(Event.Make, "Adept"),
+  17300: new Effect(Event.Make, "Phoenix"),
+  17301: new Effect(Event.Make, "Carrier"),
+  17302: new Effect(Event.Make, "Carrier"),
+  17304: new Effect(Event.Make, "VoidRay"),
+  17308: new Effect(Event.Make, "Oracle"),
+  17309: new Effect(Event.Make, "Tempest"),
+  17400: new Effect(Event.Make, "WarpPrism"),
+  17401: new Effect(Event.Make, "Observer"),
+  17402: new Effect(Event.Make, "Colossus"),
+  17403: new Effect(Event.Make, "Immortal"),
+  17500: new Effect(Event.Make, "Probe"),
+  18000: new Effect(Event.Make, "GroundWeapons1"),
+  18001: new Effect(Event.Make, "GroundWeapons2"),
+  18002: new Effect(Event.Make, "GroundWeapons3"),
+  18003: new Effect(Event.Make, "GroundArmor1"),
+  18004: new Effect(Event.Make, "GroundArmor2"),
+  18005: new Effect(Event.Make, "GroundArmor3"),
+  18006: new Effect(Event.Make, "Shields1"),
+  18007: new Effect(Event.Make, "Shields2"),
+  18008: new Effect(Event.Make, "Shields3"),
+  21400: new Effect(Event.Make, "Zealot"),
+  21401: new Effect(Event.Make, "Stalker"),
+  21403: new Effect(Event.Make, "HighTemplar"),
+  21404: new Effect(Event.Make, "DarkTemplar"),
+  21405: new Effect(Event.Make, "Sentry"),
+  21406: new Effect(Event.Make, "Adept"),
+  22800: new Effect(Event.Morph, "WarpGate"),              // TransformToWarpGate
+  22801: new Effect(Event.Morph, "Gateway"),               // CancelTransformToWarpGate
+  23600: new Effect(Event.Make, "AirWeapons1"),
+  23601: new Effect(Event.Make, "AirWeapons2"),
+  23602: new Effect(Event.Make, "AirWeapons3"),
+  23603: new Effect(Event.Make, "AirArmor1"),
+  23604: new Effect(Event.Make, "AirArmor2"),
+  23605: new Effect(Event.Make, "AirArmor3"),
+  23606: new Effect(Event.Make, "WarpGate"),
+  23700: new Effect(Event.Make, "Charge"),
+  23701: new Effect(Event.Make, "Blink"),
+  23702: new Effect(Event.Make, "AdeptPiercingAttack"),
+  71600: new Effect(Event.Help, "Chronoboost"),            // Game version 76114
 
   // Abilities of no interest
    4000: null, // Stop
@@ -120,12 +93,12 @@ const EFFECTS = {
   12001: null, // SCV harvest return cargo
 };
 
-export default function command(ability, index) {
+export default function createEvent(ability, index, loop, pid, stype, sid) {
   const effect = EFFECTS[ability * 100 + index];
 
-  if (effect === undefined) {
+  if (effect) {
+    return effect.toEvent(loop, pid, stype, sid);
+  } else if (effect === undefined) {
     console.log("Unknown ability:", ability, index);
   }
-
-  return effect ? effect.clone() : null;
 }

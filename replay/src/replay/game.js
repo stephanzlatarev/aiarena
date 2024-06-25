@@ -1,5 +1,4 @@
-import command from "./ability.js";
-import Event from "./event.js";
+import createEvent from "./ability.js";
 
 export default function readGameEvents(replay, decoder) {
   const game = {
@@ -37,23 +36,7 @@ function readGameEvent(replay, game, decoder) {
   if (type === 25) {
     readManagerResetEvent(decoder);
   } else if (type === 27) {
-    const effect = readCommandEvent(replay, decoder);
-
-    if (effect) {
-      effect.apply(game.loop, pid + 1, game.selection[pid]);
-
-      const unit = game.selection[pid];
-      const event = new Event({
-        loop: game.loop,
-        player: pid + 1,
-        unit: unit ? unit.type + " " + unit.id : "???",
-        ability: effect.ability,
-        target: effect.target ? effect.target.type + " " + effect.target.id : null,
-        output: effect.output,
-        loop: game.loop,
-      });
-      console.log(event.toString());
-    }
+    readCommandEvent(replay, decoder, game.loop, pid + 1, game.selection[pid]);
   } else if (type === 28) {
     const selection = readSelectionEvent(replay, decoder);
 
@@ -114,8 +97,8 @@ function readSelectionEvent(replay, decoder) {
   return selection;
 }
 
-function readCommandEvent(replay, decoder) {
-  let effect = null;
+function readCommandEvent(replay, decoder, loop, player, unit) {
+  let event = null;
 
   // Read the flags and ignore them
   // Maybe later we'd like to track smart clicks and queued commands but not yet
@@ -124,9 +107,11 @@ function readCommandEvent(replay, decoder) {
   if (decoder.readBits(1)) {
     const abilityLink = decoder.readInt(16);
     const abilityCommandIndex = decoder.readBits(5);
-    const abilityCommandData = decoder.readBits(1) ? decoder.readInt(8) : null;
 
-    effect = command(abilityLink, abilityCommandIndex, abilityCommandData);
+    // Read the ability command data and ignore it
+    if (decoder.readBits(1)) decoder.readInt(8);
+
+    event = createEvent(abilityLink, abilityCommandIndex, loop, player, unit.type, unit.id);
   }
 
   switch (decoder.readBits(2)) {
@@ -157,7 +142,12 @@ function readCommandEvent(replay, decoder) {
       decoder.readBits(20);
       decoder.readInt(32);
 
-      if (effect) effect.target = replay.units.get(unitTag);
+      if (event) {
+        const target = replay.units.get(unitTag);
+        event.ttype = target.type;
+        event.tid = unitTag;
+      }
+
       break;
     }
     case 3: {
@@ -176,7 +166,7 @@ function readCommandEvent(replay, decoder) {
   // Read any unit group and ignore it
   if (decoder.readBits(1)) decoder.readInt(32);
 
-  return effect;
+  replay.add(event);
 }
 
 function readManagerResetEvent(decoder) {
