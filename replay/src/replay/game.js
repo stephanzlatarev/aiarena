@@ -7,18 +7,21 @@ export default function readGameEvents(replay, decoder) {
     selection: [null, null],
   }
 
-  while (decoder.seek(isSupportedEvent, 2)) {
+  while (decoder.seek(isSupportedEvent, 3)) {
     readGameEvent(replay, game, decoder);
     decoder.skip(0);
   }
 }
 
-function isSupportedEvent(frames, pidAndType) {
+function isSupportedEvent(frames, pidAndTypeStart, typeEnd) {
   // This implementation accepts only events with one byte frames delta!
   if ((frames & 0x03) !== 0) return false;
 
-  const pid = (pidAndType & 0b00011111);
-  return ((pid === 0) || (pid === 1));
+  const pid = (pidAndTypeStart & 0b00011111);
+  if ((pid !== 0) && (pid !== 1)) return false;
+
+  const type = ((pidAndTypeStart & 0b11100000) >> 1) | (typeEnd & 0b00001111);
+  return (type > 2);
 }
 
 function readGameEvent(replay, game, decoder) {
@@ -30,7 +33,7 @@ function readGameEvent(replay, game, decoder) {
     if ((type === 25) || (type === 27) || (type === 28) || (type === 103) || (type === 104) || (type === 105)) {
       game.loop = frames;
     }
-  } else if (type > 2) {
+  } else {
     game.loop += frames;
   }
 
