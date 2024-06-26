@@ -37,18 +37,49 @@ export default class MpqTools {
     return buffer;
   }
 
-  static decompress(buffer, expectedLength) {
+  static decompress(buffer, expectedBlockLength, expectedFileLength) {
     let type = buffer.readUInt8(0);
 
     if (type === 0x10) {
       // BZip2
-      const compressed = Buffer.from(buffer.buffer, buffer.offset + 1, buffer.length - 1);
-      buffer = Buffer.alloc(expectedLength);
-      seekBzip.decode(compressed, buffer);
+      buffer = decompress(buffer, 1, buffer.length, expectedBlockLength);
+    } else if (type === 0x3C) {
+      // Block BZip2
+      const buffers = [];
+      let from = -1;
+      let decodedLength = 0;
+
+      for (let i = 0; i < buffer.length; i++) {
+        if (String.fromCharCode(buffer[i], buffer[i + 1], buffer[i + 2]) === "BZh") {
+          if (from >= 0) {
+            buffers.push(decompress(buffer, from, i, expectedBlockLength));
+            decodedLength += expectedBlockLength;
+          }
+
+          from = i;
+        }
+      }
+
+      if (from >= 0) {
+        buffers.push(decompress(buffer, from, buffer.length, expectedFileLength - decodedLength));
+      }
+
+      buffer = Buffer.concat(buffers);
+    } else {
+      throw Error("Decompression type 0x" + type.toString(16).toUpperCase() + " is not supported!");
     }
 
     return buffer;
   }
+}
+
+function decompress(buffer, from, to, length) {
+  const compressed = Buffer.from(buffer.buffer, buffer.offset + from, to - from);
+  const decompressed = Buffer.alloc(length);
+
+  seekBzip.decode(compressed, decompressed);
+
+  return decompressed;
 }
 
 let seed = 0x100001;

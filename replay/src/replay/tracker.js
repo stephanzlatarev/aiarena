@@ -22,10 +22,10 @@ function readTrackerEvent(replay, loop, type, data) {
     case 1: return readUnitBornEvent(replay, loop, data);
     case 2: return readUnitDiedEvent();
     case 3: return readUnitOwnerChangeEvent();
-    case 4: return readUnitTypeChangeEvent();
+    case 4: return readUnitTypeChangeEvent(replay, data);
     case 5: return readUpgradeCompleteEvent(replay, loop, data);
     case 6: return readUnitInitEvent(replay, data);
-    case 7: return readUnitDoneEvent();
+    case 7: return readUnitDoneEvent(replay, loop, data);
     case 8: return readUnitPositionsEvent();
     case 9: return readPlayerSetupEvent();
   }
@@ -67,7 +67,11 @@ function readUnitDiedEvent() {
 function readUnitOwnerChangeEvent() {
 }
 
-function readUnitTypeChangeEvent() {
+function readUnitTypeChangeEvent(replay, data) {
+  const id = data["0"] << 18 | data["1"];
+  const type = data["2"].toString("utf8");
+
+  replay.unit(id).type = type;
 }
 
 function readUpgradeCompleteEvent(replay, loop, data) {
@@ -91,7 +95,11 @@ function readUnitInitEvent(replay, data) {
   replay.units.set(id, new Unit(owner, type, id, x, y));
 }
 
-function readUnitDoneEvent() {
+function readUnitDoneEvent(replay, loop, data) {
+  const id = data["0"] << 18 | data["1"];
+  const unit = replay.unit(id);
+
+  replay.add(new Event(Event.Enter, loop, unit.owner, unit));
 }
 
 function readUnitPositionsEvent() {

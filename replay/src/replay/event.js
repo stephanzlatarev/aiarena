@@ -1,6 +1,9 @@
 
 export default class Event {
 
+  static MutedEvent = new Event();
+  static UnknownEvent = new Event();
+
   static Count = "count"; // A snaphost count of the subject.
   static Enter = "enter"; // The subject appears. Examples: new unit, new structure, complete upgrade.
   static Morph = "morph"; // The subject becomes something else. Examples: Gateway transforms into WarpGate.

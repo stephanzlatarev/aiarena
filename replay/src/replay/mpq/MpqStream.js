@@ -36,7 +36,7 @@ export default class MpqStream {
         const blockBuffer = Buffer.from(this.file.buffer.buffer, this.entry.filePos + blockOffset, blockLength);
 
         if (this.entry.isCompressed() && (blockLength != expectedLength)) {
-          this.currentData = MpqTools.decompress(blockBuffer, expectedLength);
+          this.currentData = MpqTools.decompress(blockBuffer, expectedLength, fileSize);
         } else {
           this.currentData = blockBuffer;
         }

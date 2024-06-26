@@ -1,3 +1,4 @@
+import Event from "./event.js";
 import createEvent from "./ability.js";
 
 export default function readGameEvents(replay, decoder) {
@@ -87,11 +88,7 @@ function readSelectionEvent(replay, decoder) {
   for (let i = 0; i < unitTagsCount; i++) {
     const unitTag = decoder.readInt(32);
 
-    if (unitTag) {
-      selection = replay.units.get(unitTag);
-    } else {
-      console.log("Unknown unit tag:", unitTag);
-    }
+    selection = replay.unit(unitTag);
   }
 
   return selection;
@@ -112,6 +109,8 @@ function readCommandEvent(replay, decoder, loop, player, unit) {
     if (decoder.readBits(1)) decoder.readInt(8);
 
     event = createEvent(abilityLink, abilityCommandIndex, loop, player, unit.type, unit.id);
+
+    if (event === Event.UnknownEvent) replay.warning(`Unsupported ability ${abilityLink}/${abilityCommandIndex}`);
   }
 
   switch (decoder.readBits(2)) {
@@ -143,7 +142,7 @@ function readCommandEvent(replay, decoder, loop, player, unit) {
       decoder.readInt(32);
 
       if (event) {
-        const target = replay.units.get(unitTag);
+        const target = replay.unit(unitTag);
         event.ttype = target.type;
         event.tid = unitTag;
       }

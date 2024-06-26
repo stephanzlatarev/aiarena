@@ -1,4 +1,5 @@
 import fs from "fs";
+import { buffer } from "node:stream/consumers";
 import MpqHeader from "./MpqHeader.js";
 import MpqHash from "./MpqHash.js";
 import MpqEntry from "./MpqEntry.js";
@@ -7,8 +8,8 @@ import MpqTools from "./MpqTools.js";
 
 export default class MpqFile {
 
-  constructor(file) {
-    this.buffer = fs.readFileSync(file);
+  constructor(buffer) {
+    this.buffer = buffer;
     this.header = new MpqHeader(this.buffer);
     this.blockSize = 0x200 << this.header.blockSize;
     this.entries = new Map();
@@ -42,6 +43,14 @@ export default class MpqFile {
     return new MpqStream(this, this.entries.get(filename)).read();
   }
 
+  static async load(address) {
+    if (address.startsWith("http://") || address.startsWith("https://")) {
+      const response = await fetch(address);
+      return new MpqFile(await buffer(response.body));
+    }
+
+    return new MpqFile(fs.readFileSync(address));
+  }
 }
 
 function key(filename) {
