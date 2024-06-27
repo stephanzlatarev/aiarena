@@ -7,8 +7,8 @@ class Effect {
     this.out = out;
   }
 
-  toEvent(loop, pid, stype, sid, ttype, tid) {
-    return new Event(this.type, loop, pid, stype, sid, ttype, tid, this.out);
+  toEvent(loop, pid, uid) {
+    return new Event(this.type, loop, pid, uid, this.out);
   }
 
 }
@@ -152,11 +152,11 @@ const EFFECTS = {
   26500: null, // Creep tumor burrowed build creep tumor
 };
 
-export default function createEvent(ability, index, loop, pid, stype, sid) {
+export default function createEvent(ability, index, loop, pid, uid) {
   const effect = EFFECTS[ability * 100 + index];
 
   if (effect) {
-    return effect.toEvent(loop, pid, stype, sid);
+    return effect.toEvent(loop, pid, uid);
   } else if (effect === undefined) {
     return Event.UnknownEvent;
   }

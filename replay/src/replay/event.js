@@ -1,6 +1,7 @@
 
 export default class Event {
 
+  static EndEvent = new Event();
   static MutedEvent = new Event();
   static UnknownEvent = new Event();
 
@@ -12,15 +13,44 @@ export default class Event {
   static Harm  =  "harm"; // The subject affects the target negatively. Examples: a Zealot attacks a Zergling.
   static Exit  =  "exit"; // The subject disappears. Examples: structure is destroyed, hallucination ends.
 
-  constructor(type, loop, pid, stype, sid, ttype, tid, out) {
-    this.type = type;   // Event type
-    this.loop = loop;   // Game loop
-    this.pid = pid;     // Player id
-    this.stype = stype; // Subject type
-    this.sid = sid;     // Subject instance
-    this.ttype = ttype; // Target type
-    this.tid = tid;     // Target instance
-    this.out = out;     // The output
+  constructor(type, loop, pid, subject, out, target) {
+    this.type = type;       // Event type
+    this.loop = loop;       // Game loop
+    this.pid = pid;         // Player id
+    this.subject = subject;
+    this.target = target;
+    this.out = out;         // The output
+  }
+
+  resolve(replay) {
+    if (this.subject) {
+      const unit = replay.unit(this.subject);
+
+      if (unit) {
+        this.pid = unit.owner;
+        this.stype = unit.type; // Subject type
+        this.sid = unit.id;     // Subject instance
+      } else {
+        this.stype = this.subject;
+        this.sid = null;
+      }
+
+      delete this.subject;
+    }
+
+    if (this.target) {
+      const unit = replay.unit(this.target);
+
+      if (unit) {
+        this.ttype = unit.type; // Target type
+        this.tid = unit.id;     // Target instance
+      } else {
+        this.ttype = this.target;
+        this.tid = null;
+      }
+
+      delete this.target;
+    }
   }
 
   toString() {

@@ -9,22 +9,17 @@ export default class Replay {
   units = new Map();
   warnings = new Set();
 
-  constructor(mpq) {
-    readTrackerEvents(this, mpq.read("replay.tracker.events"));
-    readGameEvents(this, mpq.read("replay.game.events"));
+  async parse(mpq) {
+    const collector = new EventCollector(this);
 
-    this.events.sort((a, b) => (a.loop - b.loop));
-  }
+    readTrackerEvents(collector.source(), this, mpq.read("replay.tracker.events"));
+    readGameEvents(collector.source(), this, mpq.read("replay.game.events"));
 
-  add(event) {
-    if (event && (event !== Event.MutedEvent)) {
-      this.events.push(event);
-    }
+    await collector.collect();
   }
 
   unit(tag) {
-    const unit = this.units.get(tag);
-    return unit ? unit : { id: "Unknown", type: "Unknown" };
+    return this.units.get(tag);
   }
 
   warning(log) {
@@ -32,7 +27,84 @@ export default class Replay {
   }
 
   static async load(file) {
-    return new Replay(await MpqFile.load(file));
+    const replay = new Replay();
+    const mpq = await MpqFile.load(file);
+
+    await replay.parse(mpq);
+
+    return replay;
   }
 
+}
+
+class EventCollector {
+
+  sources = new Map();
+  tick = new Map();
+
+  constructor(replay) {
+    this.replay = replay;
+  }
+
+  source() {
+    const sources = this.sources;
+    const index = this.sources.size;
+    const tick = this.tick;
+    const input = async function(event) {
+      if (!event) return;
+      if (event === Event.MutedEvent) return;
+
+      const source = this;
+
+      if (tick.has(source)) {
+        console.log("Ooops! Source", source, "is overwriting events!");
+      }
+
+      if (event === Event.EndEvent) {
+        sources.delete(source);
+        tick.delete(source);
+        return;
+      }
+
+      event.source = source;
+      tick.set(source, event);
+
+      return new Promise(async function(resolve) {
+        while (tick.has(source)) {
+          await queue();
+        }
+
+        resolve();
+      });
+    }.bind(index);
+
+    sources.set(index, input);
+
+    return input;
+  }
+
+  async collect() {
+    while (this.sources.size) {
+      // Wait for sources to push events
+      await queue();
+
+      // Check if all sources pushed an event
+      if (this.tick.size && (this.tick.size >= this.sources.size)) {
+        const events = [...this.tick.values()].sort((a, b) => (a.loop - b.loop));
+        const event = events[0];
+
+        event.resolve(this.replay);
+
+        this.replay.events.push(event);
+        this.tick.delete(event.source);
+      }
+    }
+
+    this.replay.events.sort((a, b) => (a.loop - b.loop));
+  }
+
+}
+
+async function queue() {
+  await new Promise(function(resolve) { resolve(); });
 }

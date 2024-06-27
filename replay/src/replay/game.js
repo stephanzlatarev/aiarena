@@ -1,15 +1,19 @@
 import Event from "./event.js";
 import createEvent from "./ability.js";
 
-export default function readGameEvents(replay, decoder) {
-  const game = {
-    loop: undefined,
-    selection: [null, null],
-  }
+export default async function readGameEvents(events, replay, decoder) {
+  try {
+    const game = {
+      loop: undefined,
+      selection: [null, null],
+    }
 
-  while (decoder.seek(isSupportedEvent, 3)) {
-    readGameEvent(replay, game, decoder);
-    decoder.skip(0);
+    while (decoder.seek(isSupportedEvent, 3)) {
+      await readGameEvent(events, replay, game, decoder);
+      decoder.skip(0);
+    }
+  } finally {
+    await events(Event.EndEvent);
   }
 }
 
@@ -24,7 +28,7 @@ function isSupportedEvent(frames, pidAndTypeStart, typeEnd) {
   return (type > 2);
 }
 
-function readGameEvent(replay, game, decoder) {
+async function readGameEvent(events, replay, game, decoder) {
   const frames = readFrames(decoder);
   const pid = decoder.readBits(5);
   const type = decoder.readBits(7);
@@ -40,9 +44,9 @@ function readGameEvent(replay, game, decoder) {
   if (type === 25) {
     readManagerResetEvent(decoder);
   } else if (type === 27) {
-    readCommandEvent(replay, decoder, game.loop, pid + 1, game.selection[pid]);
+    await readCommandEvent(events, replay, decoder, game.loop, pid + 1, game.selection[pid]);
   } else if (type === 28) {
-    const selection = readSelectionEvent(replay, decoder);
+    const selection = readSelectionEvent(decoder);
 
     if (selection) {
       game.selection[pid] = selection;
@@ -56,7 +60,7 @@ function readGameEvent(replay, game, decoder) {
   }
 }
 
-function readSelectionEvent(replay, decoder) {
+function readSelectionEvent(decoder) {
   let selection = null;
 
   decoder.readBits(4);
@@ -89,15 +93,13 @@ function readSelectionEvent(replay, decoder) {
 
   const unitTagsCount = decoder.readBits(9);
   for (let i = 0; i < unitTagsCount; i++) {
-    const unitTag = decoder.readInt(32);
-
-    selection = replay.unit(unitTag);
+    selection = decoder.readInt(32);
   }
 
   return selection;
 }
 
-function readCommandEvent(replay, decoder, loop, player, unit) {
+async function readCommandEvent(events, replay, decoder, loop, player, unitTag) {
   let event = null;
 
   // Read the flags and ignore them
@@ -111,7 +113,7 @@ function readCommandEvent(replay, decoder, loop, player, unit) {
     // Read the ability command data and ignore it
     if (decoder.readBits(1)) decoder.readInt(8);
 
-    event = createEvent(abilityLink, abilityCommandIndex, loop, player, unit.type, unit.id);
+    event = createEvent(abilityLink, abilityCommandIndex, loop, player, unitTag);
 
     if (event === Event.UnknownEvent) replay.warning(`Unsupported ability ${abilityLink}/${abilityCommandIndex}`);
   }
@@ -145,9 +147,7 @@ function readCommandEvent(replay, decoder, loop, player, unit) {
       decoder.readInt(32);
 
       if (event) {
-        const target = replay.unit(unitTag);
-        event.ttype = target.type;
-        event.tid = unitTag;
+        event.target = unitTag;
       }
 
       break;
@@ -168,7 +168,7 @@ function readCommandEvent(replay, decoder, loop, player, unit) {
   // Read any unit group and ignore it
   if (decoder.readBits(1)) decoder.readInt(32);
 
-  replay.add(event);
+  await events(event);
 }
 
 function readManagerResetEvent(decoder) {
