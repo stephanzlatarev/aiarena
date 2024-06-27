@@ -12,10 +12,14 @@ export default class Replay {
   async parse(mpq) {
     const collector = new EventCollector(this);
 
-    readTrackerEvents(collector.source(), this, mpq.read("replay.tracker.events"));
-    readGameEvents(collector.source(), this, mpq.read("replay.game.events"));
+    try {
+      readTrackerEvents(collector.source(), this, mpq.read("replay.tracker.events"));
+      readGameEvents(collector.source(), this, mpq.read("replay.game.events"));
 
-    await collector.collect();
+      await collector.collect();
+    } finally {
+      collector.close();
+    }
   }
 
   unit(tag) {
@@ -56,6 +60,7 @@ class EventCollector {
 
       const source = this;
 
+      if (!sources.has(source)) return;
       if (tick.has(source)) {
         console.log("Ooops! Source", source, "is overwriting events!");
       }
@@ -103,6 +108,10 @@ class EventCollector {
     this.replay.events.sort((a, b) => (a.loop - b.loop));
   }
 
+  close() {
+    this.sources.clear();
+    this.tick.clear();
+  }
 }
 
 async function queue() {
