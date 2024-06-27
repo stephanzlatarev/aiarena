@@ -1,9 +1,9 @@
 
 export default class Event {
 
-  static EndEvent = new Event();
-  static MutedEvent = new Event();
-  static UnknownEvent = new Event();
+  static EndEvent = new Event("END");
+  static MutedEvent = new Event("MUTED");
+  static UnknownEvent = new Event("UNKNOWN");
 
   static Count = "count"; // A snaphost count of the subject.
   static Enter = "enter"; // The subject appears. Examples: new unit, new structure, complete upgrade.

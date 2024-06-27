@@ -57,6 +57,7 @@ class EventCollector {
     const input = async function(event) {
       if (!event) return;
       if (event === Event.MutedEvent) return;
+      if (event === Event.UnknownEvent) return;
 
       const source = this;
 

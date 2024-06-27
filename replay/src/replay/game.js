@@ -12,6 +12,10 @@ export default async function readGameEvents(events, replay, decoder) {
       await readGameEvent(events, replay, game, decoder);
       decoder.skip(0);
     }
+  } catch (error) {
+    if (error.code !== "ERR_OUT_OF_RANGE") {
+      throw error;
+    }
   } finally {
     await events(Event.EndEvent);
   }
