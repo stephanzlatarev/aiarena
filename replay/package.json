@@ -6,6 +6,7 @@
     "start": "node ./src/start.js"
   },
   "dependencies": {
+    "mongodb": "^6.8.0",
     "seek-bzip": "^2.0.0"
   }
 }

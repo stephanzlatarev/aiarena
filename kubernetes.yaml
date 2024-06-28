@@ -1,0 +1,132 @@
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: aiarena
+  annotations:
+    kubernetes.digitalocean.com/load-balancer-id: "aiarena"
+    service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
+    service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
+spec:
+  type: LoadBalancer
+  selector:
+    module: aiarena-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 3000
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: mongo
+spec:
+  selector:
+    module: mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+  type: ClusterIP
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: aiarena-api
+  labels:
+    module: aiarena-api
+spec:
+  selector:
+    matchLabels:
+      module: aiarena-api
+  template:
+    metadata:
+      labels:
+        module: aiarena-api
+    spec:
+      containers:
+        - name: aiarena-api
+          image: docker.io/stephanzlatarev/aiarena-api
+          ports:
+            - containerPort: 3000
+
+---
+
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: aiarena-replay
+spec:
+  schedule: "*/10 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      parallelism: 1
+      completions: 1
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 180
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: replay
+              image: docker.io/stephanzlatarev/aiarena-replay
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: secrets
+                  mountPath: /app/secrets
+                  readOnly: true
+          volumes:
+            - name: secrets
+              secret:
+                secretName: aiarena
+
+---
+
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: mongo
+  labels:
+    module: mongo
+spec:
+  replicas: 1
+  serviceName: mongo
+  selector:
+    matchLabels:
+      module: mongo
+  template:
+    metadata:
+      labels:
+        module: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: mongo
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 200Gi
+        storageClassName: do-block-storage
+
+---
