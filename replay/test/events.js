@@ -1,6 +1,6 @@
-import Replay from "./replay/replay.js";
+import Replay from "../src/replay/replay.js";
 
-const file = "test.SC2Replay";
+const file = "./test/test.SC2Replay";
 
 async function go() {
   try {

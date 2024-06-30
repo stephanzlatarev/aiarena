@@ -2,7 +2,10 @@ import fs from "fs";
 import https from "https";
 import { readProgress, storeMatch, storeProgress } from "./mongo.js";
 import Replay from "./replay/replay.js";
+import getOverview from "./timeline/overview.js";
+import getTimeline from "./timeline/timeline.js";
 
+const VERSION = 1;
 const COMPETITION = 27;
 
 const TRACE = false;
@@ -61,27 +64,27 @@ async function go() {
   await call("POST", "/api/auth/login/", SECRETS);
 
   const maps = await getMaps();
+
   let progress = await readProgress(COMPETITION);
+  if (!progress || (progress.version !== VERSION)) progress = { version: VERSION, competition: COMPETITION, rounds: {} };
 
-  if (!progress) {
-    progress = { competition: COMPETITION, rounds: {} };
-  }
+  const round = await getRoundInProgress(COMPETITION, progress);
 
-  for (const round of await getRounds(COMPETITION)) {
-    if (progress.rounds[round.number]) continue;
-
+  if (round) {
     let isRoundComplete = true;
 
     for (const match of await getMatches(round.id)) {
       let warnings;
-      let events;
+      let timeline;
+      let overview;
 
       if (match.replay) {
         try {
           const replay = await Replay.load(match.replay);
   
           warnings = [...replay.warnings];
-          events = replay.events;
+          timeline = getTimeline(replay);
+          overview = getOverview(timeline);
 
           console.log("Match:", match.id);
         } catch (error) {
@@ -104,7 +107,8 @@ async function go() {
         winner: match.winner,
         replay: match.replay,
         warnings: warnings,
-        events: events,
+        overview: overview,
+        timeline: timeline,
       });
     }
 
@@ -116,6 +120,9 @@ async function go() {
       console.log("Round", round.number);
     }
   }
+
+  console.log("Done.");
+  process.exit(0);
 }
 
 async function getMaps() {
@@ -131,6 +138,12 @@ async function getMaps() {
 
 async function getRounds(competition) {
   return (await call("GET", "/api/rounds/?limit=1000&competition=" + competition)).results.sort((a, b) => (a.number - b.number));
+}
+
+async function getRoundInProgress(competition, progress) {
+  for (const round of await getRounds(competition)) {
+    if (!progress.rounds[round.number]) return round;
+  }
 }
 
 async function getMatches(round) {
