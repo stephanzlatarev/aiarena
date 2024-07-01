@@ -1,6 +1,6 @@
 import fs from "fs";
 import https from "https";
-import { readProgress, storeMatch, storeProgress } from "./mongo.js";
+import { readProgress, storeMatch, storeProgress, storeRanking } from "./mongo.js";
 import Replay from "./replay/replay.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
@@ -60,66 +60,14 @@ function call(method, path, data) {
 }
 
 async function go() {
-  console.log("Browsing arena matches...");
+  console.log("Connecting to AI Arena...");
   await call("POST", "/api/auth/login/", SECRETS);
 
-  const maps = await getMaps();
+  console.log("Updating rankings...");
+  await processRankings(COMPETITION);
 
-  let progress = await readProgress(COMPETITION);
-  if (!progress || (progress.version !== VERSION)) progress = { version: VERSION, competition: COMPETITION, rounds: {} };
-
-  const round = await getRoundInProgress(COMPETITION, progress);
-
-  if (round) {
-    let isRoundComplete = true;
-
-    for (const match of await getMatches(round.id)) {
-      let warnings;
-      let timeline;
-      let overview;
-
-      if (match.replay) {
-        try {
-          const replay = await Replay.load(match.replay);
-  
-          warnings = [...replay.warnings];
-          timeline = getTimeline(replay);
-          overview = getOverview(timeline);
-
-          console.log("Match:", match.id);
-        } catch (error) {
-          console.log(error.message);
-
-          warnings = ["Failed to parse replay file."];
-        }
-      } else {
-        isRoundComplete = false;
-      }
-
-      storeMatch({
-        competition: COMPETITION,
-        round: round.number,
-        match: match.id,
-        time: match.time,
-        map: maps.get(match.map),
-        player1: match.player1,
-        player2: match.player2,
-        winner: match.winner,
-        replay: match.replay,
-        warnings: warnings,
-        overview: overview,
-        timeline: timeline,
-      });
-    }
-
-    if (isRoundComplete) {
-      progress.rounds[round.number] = true;
-
-      await storeProgress(progress);
-
-      console.log("Round", round.number);
-    }
-  }
+  console.log("Updating matches...");
+  await processRounds(COMPETITION);
 
   console.log("Done.");
   process.exit(0);
@@ -164,6 +112,86 @@ async function getMatches(round) {
         replay: match.result.replay_file,
       };
     });
+}
+
+async function processRounds(competition) {
+  const maps = await getMaps();
+
+  let progress = await readProgress(competition);
+  if (!progress || (progress.version !== VERSION)) progress = { version: VERSION, competition: competition, rounds: {} };
+
+  const round = await getRoundInProgress(competition, progress);
+
+  if (round) {
+    let isRoundComplete = true;
+
+    for (const match of await getMatches(round.id)) {
+      let warnings;
+      let timeline;
+      let overview;
+
+      if (match.replay) {
+        try {
+          const replay = await Replay.load(match.replay);
+  
+          warnings = [...replay.warnings];
+          timeline = getTimeline(replay);
+          overview = getOverview(timeline);
+
+          console.log("Match:", match.id);
+        } catch (error) {
+          console.log(error.message);
+
+          warnings = ["Failed to parse replay file."];
+        }
+      } else {
+        isRoundComplete = false;
+      }
+
+      await storeMatch({
+        competition: COMPETITION,
+        round: round.number,
+        match: match.id,
+        time: match.time,
+        map: maps.get(match.map),
+        player1: match.player1,
+        player2: match.player2,
+        winner: match.winner,
+        replay: match.replay,
+        warnings: warnings,
+        overview: overview,
+        timeline: timeline,
+      });
+    }
+
+    if (isRoundComplete) {
+      progress.rounds[round.number] = true;
+
+      await storeProgress(progress);
+
+      console.log("Round", round.number);
+    }
+  }
+}
+
+async function processRankings(competition) {
+  const bots = (await call("GET", "/api/bots/?limit=1000")).results;
+  const rank = (await call("GET", "/api/competition-participations/?limit=1000&competition=" + competition)).results;
+
+  for (const one of rank) {
+    const bot = bots.find(bot => (bot.id === one.bot));
+
+    await storeRanking({
+      id: bot.id,
+      bot: bot.name,
+      race: bot.plays_race.label,
+      competition: competition,
+      elo: one.elo,
+      winRate: one.win_perc,
+      division: one.division_num,
+      lastUpdate: bot.bot_zip_updated,
+    });
+  }
 }
 
 go();

@@ -23,3 +23,7 @@ export async function storeProgress(progress) {
 export async function storeMatch(match) {
   await (await connect("matches")).updateOne({ match: match.match }, { $set: match }, { upsert: true });
 }
+
+export async function storeRanking(ranking) {
+  await (await connect("rankings")).updateOne({ id: ranking.id }, { $set: ranking }, { upsert: true });
+}
