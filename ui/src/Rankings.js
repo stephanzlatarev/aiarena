@@ -44,7 +44,7 @@ export default function Rankings() {
       <TableRow key={ bot }>
         <TableCell>{ rank }</TableCell>
         <TableCell component="th" scope="row">
-          <img src={ one.race + ".png" } width="17" style={{ position: "relative", top: "4px", marginRight: "5px" }} />
+          <img src={ "/" + one.race + ".png" } width="17" style={{ position: "relative", top: "4px", marginRight: "5px" }} />
           <Link to={ path }>{ bot }</Link>
         </TableCell>
         <TableCell>{ one.winRate.toFixed(2) }%</TableCell>

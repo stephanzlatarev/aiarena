@@ -33,7 +33,7 @@ function Loader(props) {
   return (
     <React.Suspense fallback={ <div>Loading info...</div> } >
       <Await resolve={ data.info } errorElement={ <div>Error loading info!</div> }>
-        { props.children }
+        { React.cloneElement(props.children, data) }
       </Await>
     </React.Suspense>
   );
@@ -45,7 +45,7 @@ const router = createBrowserRouter(createRoutesFromElements(
 
     <Route path="bot/:bot">
       <Route index element={ <Loader><Bot /></Loader> } loader={ ({ params }) => defer({ info: Api.get("bot/" + params.bot) }) } />
-      <Route path="match/:match" element={ <Loader><Match /></Loader> } loader={ ({ params }) => defer({ info: Api.get("match/" + params.match) }) } />
+      <Route path="match/:match" element={ <Loader><Match /></Loader> } loader={ ({ params }) => defer({ bot: params.bot, info: Api.get("match/" + params.match) }) } />
       <Route path="*" element={ <div>How did you get here?</div> } />
     </Route>
 
