@@ -20,6 +20,8 @@ export default function() {
   );
 }
 
+const DivisionHeader = { border: 0, backgroundImage: "linear-gradient(#556cd6, white)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
+
 function Rankings() {
   const rankings = useAsyncValue().sort(function(a, b) {
     if (!a.division && !b.division) return a.bot.localeCompare(b.bot);
@@ -37,20 +39,22 @@ function Rankings() {
     const path = "/bot/" + bot;
 
     if (one.division !== division) {
-      const separator = one.division ? "Division " + one.division : "Awaiting entry";
+      const separator = one.division ? "Division " + one.division : "Joining or leaving";
 
       rows.push(
         <TableRow key={ one.division }>
-          <TableCell colSpan={ 9 } style={{ textAlign: "center" }}>{ separator }</TableCell>
+          <TableCell colSpan={ 9 } style={ DivisionHeader }>{ separator }</TableCell>
         </TableRow>
       );
 
       division = one.division;
     }
 
+    if (!one.division) rank = null;
+
     rows.push(
       <TableRow key={ bot }>
-        <TableCell>{ rank++ }</TableCell>
+        <TableCell>{ rank }</TableCell>
         <TableCell component="th" scope="row">
           <img src={ one.race + ".png" } width="17" style={{ position: "relative", top: "4px", marginRight: "5px" }} />
           <Link to={ path }>{ bot }</Link>
@@ -63,6 +67,8 @@ function Rankings() {
         <TableCell>-</TableCell>
       </TableRow>
     );
+
+    if (one.division) rank++;
   }
 
   return (
