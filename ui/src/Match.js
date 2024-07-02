@@ -1,19 +1,7 @@
 import * as React from "react";
-import { Await, useAsyncValue, useLoaderData } from "react-router-dom";
+import { useAsyncValue } from "react-router-dom";
 
-export default function() {
-  const bot = useLoaderData();
-
-  return (
-    <React.Suspense fallback={ <div>Loading match info...</div> } >
-      <Await resolve={ bot.info } errorElement={ <div>Error loading match info!</div> }>
-        <Match />
-      </Await>
-    </React.Suspense>
-  );
-}
-
-function Match() {
+export default function Match() {
   const match = useAsyncValue();
 
   return (

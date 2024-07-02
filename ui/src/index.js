@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { Route, RouterProvider, Outlet, createBrowserRouter, createRoutesFromElements, defer } from "react-router-dom";
+import { Route, RouterProvider, Outlet, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
+import { Await, defer, useAsyncValue, useLoaderData } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import Container from "@mui/material/Container";
 import { ThemeProvider } from "@mui/material/styles";
@@ -26,13 +27,25 @@ function Frame() {
   );
 }
 
+function Loader(props) {
+  const data = useLoaderData();
+
+  return (
+    <React.Suspense fallback={ <div>Loading info...</div> } >
+      <Await resolve={ data.info } errorElement={ <div>Error loading info!</div> }>
+        { props.children }
+      </Await>
+    </React.Suspense>
+  );
+}
+
 const router = createBrowserRouter(createRoutesFromElements(
   <Route path="/" element={ <Frame /> }>
-    <Route index element={ <Rankings /> } loader={ () => defer({ info: Api.get("rankings") }) } />
+    <Route index element={ <Loader><Rankings /></Loader> } loader={ () => defer({ info: Api.get("rankings") }) } />
 
     <Route path="bot/:bot">
-      <Route index element={ <Bot /> } loader={ ({ params }) => defer({ info: Api.get("bot/" + params.bot) }) } />
-      <Route path="match/:match" element={ <Match /> } loader={ ({ params }) => defer({ info: Api.get("match/" + params.match) }) } />
+      <Route index element={ <Loader><Bot /></Loader> } loader={ ({ params }) => defer({ info: Api.get("bot/" + params.bot) }) } />
+      <Route path="match/:match" element={ <Loader><Match /></Loader> } loader={ ({ params }) => defer({ info: Api.get("match/" + params.match) }) } />
       <Route path="*" element={ <div>How did you get here?</div> } />
     </Route>
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Await, Link, useAsyncValue, useLoaderData } from "react-router-dom";
+import { Link, useAsyncValue } from "react-router-dom";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,19 +8,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 
-export default function() {
-  const bot = useLoaderData();
-
-  return (
-    <React.Suspense fallback={ <div>Loading bot info...</div> } >
-      <Await resolve={ bot.info } errorElement={ <div>Error loading bot info!</div> }>
-        <Bot />
-      </Await>
-    </React.Suspense>
-  );
-}
-
-function Bot() {
+export default function Bot() {
   const { bot, matches } = useAsyncValue();
 
   const rows = matches.map((match) => addScore(bot, match)).filter(match => (match.score < 0)).sort(orderByScore).map(match => (

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Await, Link, useAsyncValue, useLoaderData } from "react-router-dom";
+import { Link, useAsyncValue } from "react-router-dom";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,21 +8,9 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 
-export default function() {
-  const rankings = useLoaderData();
-
-  return (
-    <React.Suspense fallback={ <div>Loading rankings...</div> } >
-      <Await resolve={ rankings.info } errorElement={ <div>Error loading rankings!</div> }>
-        <Rankings />
-      </Await>
-    </React.Suspense>
-  );
-}
-
 const DivisionHeader = { border: 0, backgroundImage: "linear-gradient(#556cd6, white)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
 
-function Rankings() {
+export default function Rankings() {
   const rankings = useAsyncValue().sort(function(a, b) {
     if (!a.division && !b.division) return a.bot.localeCompare(b.bot);
     if (!a.division) return 1;
