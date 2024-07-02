@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useAsyncValue } from "react-router-dom";
 import Link from "@mui/material/Link";
+import Army from "./Army";
+import Rating from "./Rating";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
@@ -67,7 +69,7 @@ function BotInfo({ info, winner, reverse }) {
       <div style={{ color: resultColor, fontSize: "1.5rem", fontWeight: "bold", textAlign: "center" }}>{ resultText }</div>
       Military: <Rating capacity={ info.militaryCapacity } performance={ info.militaryPerformance } /> <br />
       Economy: <Rating capacity={ info.economyCapacity } performance={ info.economyPerformance } /> <br />
-      Best army: { info.armyBuild.join(" ") }
+      Best army: <Army army={ info.armyBuild } />
     </div>
   );
 
@@ -133,6 +135,8 @@ function Timeline({ match, playerMap, width }) {
       const rightPlayer = playerMap[2];
       const color = (event.players[1].kill > event.players[2].kill) ? playerMap.color1 : playerMap.color2;
 
+      height += 16;
+
       divs.center.push(
         <div top={ height } style={{ color: color, fontSize: "3rem" }}>
           &#9876;
@@ -157,16 +161,20 @@ function Timeline({ match, playerMap, width }) {
         </div>
       );
 
-      pathop = "M";
+      pathop = "L";
       height += 80;
     }
   }
 
+  const leftSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "right", marginRight: "60%", backgroundColor: "rgba(255, 255, 255, 0.9)" };
+  const centerSideStyle = { position: "absolute", left: 0, width: "6%", display: "flex", justifyContent: "center", marginLeft: "47%", marginRight: "47%", backgroundColor: "rgba(255, 255, 255, 0.9)" };
+  const rightSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "left", marginLeft: "60%", backgroundColor: "rgba(255, 255, 255, 0.9)" };
+
   return (
     <div width="100%" style={{ position: "relative" }}>
-      { divs.left.map(div => (<div key={ key++ } style={{ position: "absolute", top: div.props.top, left: 0, width: "40%", display: "flex", justifyContent: "right", marginRight: "60%" }}>{ div }</div>)) }
-      { divs.center.map(div => (<div key={ key++ } style={{ position: "absolute", top: div.props.top, left: 0, width: "100%", display: "flex", justifyContent: "center" }}>{ div }</div>)) }
-      { divs.right.map(div => (<div key={ key++ } style={{ position: "absolute", top: div.props.top, left: 0, width: "40%", display: "flex", justifyContent: "left", marginLeft: "60%" }}>{ div }</div>)) }
+      { divs.left.map(div => (<div key={ key++ } style={{ ...leftSideStyle, top: div.props.top }}>{ div }</div>)) }
+      { divs.center.map(div => (<div key={ key++ } style={{ ...centerSideStyle, top: div.props.top }}>{ div }</div>)) }
+      { divs.right.map(div => (<div key={ key++ } style={{ ...rightSideStyle, top: div.props.top }}>{ div }</div>)) }
 
       <svg width={ width } height={ height } xmlns="http://www.w3.org/2000/svg">
         <line x1={ midx } y1="0" x2={ midx } y2={ height } style={{ stroke: "lightGray", strokeWidth: 3 }} />
@@ -175,27 +183,6 @@ function Timeline({ match, playerMap, width }) {
       </svg>
     </div>
   );
-}
-
-function Rating({ capacity, performance }) {
-  capacity = (capacity > 0) ? Math.min(capacity, 100) : 0;
-  performance = (performance > 0) ? Math.min(performance, 100) : 0;
-
-  const dcolor = (performance > capacity) ? "#55D66C" : "#D6556C";
-
-  return (
-    <svg width="133" height="10" xmlns="http://www.w3.org/2000/svg">
-      <line x1="0" y1="5" x2="100" y2="5"  style={{ stroke: "#CCCCDD", strokeWidth: 10, strokeDasharray: "9,1" }} />
-      <line x1="0" y1="5" x2={ Math.max(capacity, performance) } y2="5"  style={{ stroke: dcolor, strokeWidth: 10, strokeDasharray: "9,1" }} />
-      <line x1="0" y1="5" x2={ Math.min(capacity, performance) } y2="5"  style={{ stroke: "#556CD6", strokeWidth: 10, strokeDasharray: "9,1" }} />
-      <text x="100" y="8" fill="black" fontSize="10">({performance.toFixed(1)})</text>
-    </svg>
-  );
-}
-
-function Army({ army }) {
-  const types = Object.keys(army).sort((a, b) => (army[b] - army[a]));
-  return types.map(type => army[type] + " " + type).join(", ");
 }
 
 function createPlayerMap(bot, match) {

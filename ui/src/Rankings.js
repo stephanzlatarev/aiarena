@@ -7,6 +7,8 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import Army from "./Army";
+import Rating from "./Rating";
 
 const DivisionHeader = { border: 0, backgroundImage: "linear-gradient(#556cd6, white)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
 
@@ -49,10 +51,10 @@ export default function Rankings() {
         </TableCell>
         <TableCell>{ one.winRate.toFixed(2) }%</TableCell>
         <TableCell>{ one.elo }</TableCell>
-        <TableCell>-</TableCell>
-        <TableCell>-</TableCell>
-        <TableCell>-</TableCell>
-        <TableCell>-</TableCell>
+        <TableCell><Army army={ one.armyBuild } /></TableCell>
+        <TableCell><Rating capacity={ one.militaryCapacity } performance={ one.militaryPerformance } /></TableCell>
+        <TableCell><Rating capacity={ one.economyCapacity } performance={ one.economyPerformance } /></TableCell>
+        <TableCell><Rating capacity={ one.technologyCapacity } performance={ one.technologyPerformance } /></TableCell>
       </TableRow>
     );
 
