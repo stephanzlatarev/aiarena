@@ -85,6 +85,7 @@ function BotInfo({ info, winner, reverse }) {
       <div style={{ color: resultColor, fontSize: "1.5rem", fontWeight: "bold", textAlign: "center" }}>{ resultText }</div>
       Military: <Rating capacity={ info.militaryCapacity } performance={ info.militaryPerformance } /> <br />
       Economy: <Rating capacity={ info.economyCapacity } performance={ info.economyPerformance } /> <br />
+      Technology: <Rating capacity={ info.technologyCapacity } performance={ info.technologyPerformance } /> <br />
       Best army: <Army army={ info.armyBuild } />
     </div>
   );
