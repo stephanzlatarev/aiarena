@@ -1,7 +1,7 @@
 
 export default function Rating({ capacity, performance }) {
-  capacity = (capacity > 0) ? Math.min(capacity, 100) : 0;
-  performance = (performance > 0) ? Math.min(performance, 100) : 0;
+  performance = (performance >= 0) ? Math.min(performance, 100) : 0;
+  capacity = (capacity >= 0) ? Math.min(capacity, 100) : performance;
 
   const dcolor = (performance > capacity) ? "#55D66C" : "#D6556C";
 

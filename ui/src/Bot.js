@@ -1,17 +1,52 @@
 import * as React from "react";
 import { Link, useAsyncValue } from "react-router-dom";
 import Paper from "@mui/material/Paper";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import Army from "./Army";
+import Rating from "./Rating";
 
 export default function Bot() {
   const { bot, matches } = useAsyncValue();
+  const [tab, setTab] = React.useState("1");
 
-  const rows = matches.map((match) => addScore(bot, match)).filter(match => (match.score < 0)).sort(orderByScore).map(match => (
+  const worstMatches = matches.map((match) => addScore(bot, match)).filter(match => (match.score < 0)).sort(orderByScore);
+  worstMatches.length = 30;
+
+  return (
+    <Paper elevation={ 3 }>
+      <Tabs value={ tab } onChange={ (_, value) => setTab(value) }>
+        <Tab label="Rounds" value="1" />
+        <Tab label="Worst matches" value="2" />
+      </Tabs>
+      <TabPanel tab={ tab } index="1">Rounds</TabPanel>
+      <TabPanel tab={ tab } index="2">
+        <MatchList bot={ bot } matches={ worstMatches } />
+      </TabPanel>
+    </Paper>
+  );
+}
+
+function TabPanel({ children, tab, index }) {
+  if (tab === index) {
+    return (
+      <div role="tabpanel">
+        {children}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function MatchList({ bot, matches }) {
+  const rows = matches.map(match => (
     <TableRow key={ match.match }>
       <TableCell><Link to={ "/bot/" + bot + "/match/" + match.match }>{ match.match }</Link></TableCell>
       <TableCell>{ match.round }</TableCell>
@@ -20,10 +55,10 @@ export default function Bot() {
       <TableCell>{ match.opponent }</TableCell>
       <TableCell></TableCell>
       <TableCell>Loss</TableCell>
-      <TableCell>{ Math.abs(match.overview.own.score).toFixed(1) }</TableCell>
-      <TableCell>{ match.overview.own.militaryPerformance }</TableCell>
-      <TableCell>{ match.overview.own.economyPerformance } ({ match.overview.own.economyCapacity }) </TableCell>
-      <TableCell>{ match.overview.own.armyBuild.join(", ") }</TableCell>
+      <TableCell><Rating performance={ Math.abs(match.overview.own.score) } /></TableCell>
+      <TableCell><Rating capacity={ match.overview.own.militaryCapacity } performance={ match.overview.own.militaryPerformance } /></TableCell>
+      <TableCell><Rating capacity={ match.overview.own.economyCapacity } performance={ match.overview.own.economyPerformance } /></TableCell>
+      <TableCell><Army army={ match.overview.own.armyBuild } /></TableCell>
     </TableRow>
   ));
 
