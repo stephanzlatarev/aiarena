@@ -36,6 +36,7 @@ export default function Match({ bot }) {
         Match: { match.match } &nbsp;
         Time: { new Date(match.time).toLocaleString() } &nbsp;
         Map: { match.map } &nbsp;
+        Duration: { clock(match.duration) } &nbsp;
         <Link href={ "https://aiarena.net/matches/" + match.match } target="_blank" rel="noopener">Download replay</Link>
       </div>
 
