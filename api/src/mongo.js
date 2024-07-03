@@ -21,7 +21,7 @@ export async function getBotInfo(bot) {
   info.ranking = await rankings.findOne({ bot: bot });
 
   const matches = await connect("matches");
-  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, player1: 1, player2: 1, winner: 1, replay: 1, warnings: 1, overview: 1 };
+  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, player1: 1, player2: 1, winner: 1, warnings: 1, overview: 1 };
 
   let cursor = matches.find({ player1: bot }).project(matchProjection);
   while (await cursor.hasNext()) {
@@ -40,7 +40,7 @@ export async function getMatchInfo(match) {
   if (!match || !match.length) return;
 
   const matches = await connect("matches");
-  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, player1: 1, player2: 1, duration: 1, winner: 1, replay: 1, warnings: 1, overview: 1, timeline: 1 };
+  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, player1: 1, player2: 1, duration: 1, winner: 1, warnings: 1, overview: 1, timeline: 1 };
   const matchInfo = await matches.findOne({ match: Number(match) }, { projection: matchProjection });
 
   const rankings = await connect("rankings");
