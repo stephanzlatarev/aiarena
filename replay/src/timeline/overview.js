@@ -53,7 +53,7 @@ export default function overview(replay, timeline) {
     }
 
     const armyBuild = getArmyBuild(build.army);
-    const militaryCapacity = roundScore(MILITARY_COEFFICIENT * fight.player.value);
+    const militaryCapacity = roundScore(MILITARY_COEFFICIENT * build.value);
     const militaryPerformance = roundScore(militaryCapacity * fight.opponent.value * fight.player.kill / (fight.player.value + 1) / (fight.opponent.kill + 1));
     const economyCapacity = roundScore(work / time);
     const economyPerformance = roundScore(ECONOMY_COEFFICIENT * wealth / time);
