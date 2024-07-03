@@ -103,15 +103,22 @@ async function getMatches(round) {
 }
 
 async function updateMatchDuration(match, duration) {
-  await (await connect("matches")).updateOne({ match: match }, { $set: { duration: duration } });
+  const matches = await connect("matches");
+
+  await matches.updateOne({ match: match }, { $set: { duration: duration } });
+
+  console.log("\tMatch", match, "duration:", duration);
 }
 
 async function processRankings() {
-  for (const round of await getRounds()) {
+  const rounds = await getRounds();
+
+  for (const round of rounds) {
     console.log("Round", round.number);
 
-    for (const [match, duration] of await getMatches(round.id)) {
-      console.log("\tMatch", match, "duration:", duration);
+    const matches = await getMatches(round.id);
+
+    for (const [match, duration] of matches) {
       await updateMatchDuration(match, duration);
     }
   }

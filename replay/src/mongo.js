@@ -7,6 +7,19 @@ async function connect(collection) {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
     console.log("Connected to MongoDB.");
+
+    const aiarena = client.db("aiarena");
+    const matchIndexes = await aiarena.collection("matches").listIndexes().toArray();
+
+    if (matchIndexes < 4) {
+      console.log("Competition index created:", await aiarena.collection("progress").createIndex({ competition: 1 }));
+      console.log("Rankings index by id created:", await aiarena.collection("rankings").createIndex({ id: 1 }));
+      console.log("Rankings index by name created:", await aiarena.collection("rankings").createIndex({ bot: 1 }));
+      console.log("Match index by id created:", await aiarena.collection("matches").createIndex({ match: 1 }));
+      console.log("Match index by player1 created:", await aiarena.collection("matches").createIndex({ player1: 1 }));
+      console.log("Match index by player2 created:", await aiarena.collection("matches").createIndex({ player2: 1 }));
+      console.log("Match index by map and players created:", await aiarena.collection("matches").createIndex({ map: 1, player1: 1, player2: 1 }));
+    }
   }
 
   return client.db("aiarena").collection(collection);
