@@ -37,12 +37,12 @@ function addLoss(losses, type, count) {
   }
 }
 
-function createPart(chunk) {
+function createPart(replay, chunk) {
   let loop = Infinity;
   const players = {};
 
-  players[PLAYER_1] = { resources: {}, losses: {} };
-  players[PLAYER_2] = { resources: {}, losses: {} };
+  players[PLAYER_1] = { army: {}, resources: {}, losses: {} };
+  players[PLAYER_2] = { army: {}, resources: {}, losses: {} };
 
   for (const event of chunk) {
     if (event.loop < loop) loop = event.loop;
@@ -54,7 +54,10 @@ function createPart(chunk) {
     }
   }
 
-  if (loop === Infinity) console.log("OOOPS 2:", chunk);
+  for (const one in players) {
+    players[one].army = getArmyCount(replay, loop, one);
+  }
+
   return {
     type: "stats",
     loop: loop,
@@ -62,8 +65,8 @@ function createPart(chunk) {
   };
 }
 
-function createTimeline(chunks) {
-  return chunks.map(createPart);
+function createTimeline(replay, chunks) {
+  return chunks.map(chunk => createPart(replay, chunk));
 }
 
 function addHighlights(replay, timeline) {
@@ -129,5 +132,5 @@ function addHighlights(replay, timeline) {
 }
 
 export default function timeline(replay) {
-  return addHighlights(replay, createTimeline(splitInChunks(replay.events)));
+  return addHighlights(replay, createTimeline(replay, splitInChunks(replay.events)));
 }

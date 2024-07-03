@@ -17,44 +17,46 @@ export default function overview(timeline) {
     let time = 0;
     let work = 0;
     let wealth = 0;
-    let fight = null;
+
+    const build = { army: {}, value: 0 };
+    const fight = { kill: 0, player: { army: {}, value: 0, kill: 0 }, opponent: { value: 0, kill: 0 } };
 
     for (const point of timeline) {
+      const currentPlayerInfo = point.players[player];
+
       if (point.type === "stats") {
         time += 1 / STATS_PER_MINUTE;
-        work += point.players[player].resources.activeWorkers / STATS_PER_MINUTE;
-        wealth = point.players[player].resources.totalValue;
+        work += currentPlayerInfo.resources.activeWorkers / STATS_PER_MINUTE;
+        wealth = currentPlayerInfo.resources.totalValue;
+
+        if (currentPlayerInfo.resources.activeForces >= build.value) {
+          build.army = currentPlayerInfo.army;
+          build.value = currentPlayerInfo.resources.activeForces;
+        }
       } else if (point.type === "fight") {
-        if (fight) {
-          if (point.players[player].value > fight.players[player].value) {
-            fight = point;
-          }
-        } else {
-          fight = point;
+        const opponentInfo = point.players[(player === PLAYER_2) ? PLAYER_1 : PLAYER_2];
+        const kill = currentPlayerInfo.kill + opponentInfo.kill;
+
+        if (currentPlayerInfo.value >= build.value) {
+          build.army = currentPlayerInfo.army;
+          build.value = currentPlayerInfo.value;
+        }
+
+        if (currentPlayerInfo.kill && opponentInfo.kill && (!fight || (kill > fight.kill))) {
+          fight.kill = kill;
+          fight.player = currentPlayerInfo;
+          fight.opponent = opponentInfo;
         }
       }
     }
 
-    players[player] = {};
+    const armyBuild = getArmyBuild(build.army);
+    const militaryCapacity = Math.floor(MILITARY_COEFFICIENT * fight.player.value);
+    const militaryPerformance = Math.floor(Math.min(militaryCapacity * fight.opponent.value * fight.player.kill / (fight.player.value + 1) / (fight.opponent.kill + 1), 100));
+    const economyCapacity = Math.floor(ECONOMY_COEFFICIENT * work / time);
+    const economyPerformance = Math.floor(ECONOMY_COEFFICIENT * wealth / work);
 
-    if (fight) {
-      const opponent = (player === PLAYER_2) ? PLAYER_1 : PLAYER_2;
-      const playerArmyValue = fight.players[player].value;
-      const opponentArmyValue = fight.players[opponent].value;
-      const playerKillValue = fight.players[player].kill;
-      const opponentKillValue = fight.players[opponent].kill;
-
-      players[player].armyBuild = getArmyBuild(fight.players[player].army);
-      players[player].militaryCapacity = Math.floor(MILITARY_COEFFICIENT * fight.players[player].value);
-      players[player].militaryPerformance = Math.min(Math.floor(players[player].militaryCapacity * opponentArmyValue * playerKillValue / playerArmyValue / opponentKillValue), 100);
-    } else {
-      players[player].armyBuild = [];
-      players[player].militaryCapacity = 0;
-      players[player].militaryPerformance = 0;
-    }
-
-    players[player].economyCapacity = Math.floor(ECONOMY_COEFFICIENT * work / time);
-    players[player].economyPerformance = Math.floor(ECONOMY_COEFFICIENT * wealth / work);
+    players[player] = { armyBuild, militaryCapacity, militaryPerformance, economyCapacity, economyPerformance };
   }
 
   return { players: players };

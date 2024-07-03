@@ -1,6 +1,7 @@
 
 const ArmyRank = {
   // Protoss army
+  Probe: 0,
   Carrier: 1,
   VoidRay: 2,
   Colossus: 3,
@@ -21,6 +22,7 @@ const ArmyRank = {
   Observer: 18,
 
   // Terran army
+  SCV: 0,
   Battlecruiser: 1,
   Liberator: 2,
   Raven: 3,
@@ -40,6 +42,7 @@ const ArmyRank = {
   Medivac: 17,
 
   // Zerg army
+  Drone: 0,
   BroodLord: 1,
   Viper: 2,
   Corruptor: 3,
@@ -60,15 +63,29 @@ const ArmyRank = {
 
 export function getArmyCount(replay, loop, pid) {
   const army = {};
+  let ranked = 0;
 
   for (const unit of replay.units.values()) {
-    if (ArmyRank[unit.type] && (unit.owner == pid) && (unit.enter <= loop) && (unit.exit > loop)) {
+    const rank = ArmyRank[unit.type];
+
+    if ((unit.owner == pid) && (unit.enter <= loop) && (unit.exit > loop) && (rank >= 0)) {
       const type = unit.type;
   
       if (army[type]) {
         army[type]++;
       } else {
         army[type] = 1;
+      }
+
+      ranked += rank;
+    }
+  }
+
+  // Remove zero ranked units if there are ranked units
+  if (ranked) {
+    for (const type in army) {
+      if (!ArmyRank[type]) {
+        delete army[type];
       }
     }
   }
