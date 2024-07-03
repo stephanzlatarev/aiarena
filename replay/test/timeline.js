@@ -75,7 +75,7 @@ async function go() {
       show(point);
     }
 
-    console.log("overview:", JSON.stringify(overview(points), null, 2));
+    console.log("overview:", JSON.stringify(overview(replay, points), null, 2));
   } catch (error) {
     console.log(error);
   }

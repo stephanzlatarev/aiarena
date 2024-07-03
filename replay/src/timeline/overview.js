@@ -10,8 +10,9 @@ const PLAYER_2 = 2;
 const INITIAL_WEALTH = 1000;
 const ECONOMY_COEFFICIENT = 100 / 6000;
 const MILITARY_COEFFICIENT = 100 / 16000;
+const TECHNOLOGY_COEFFICIENT = 100 / 50;
 
-export default function overview(timeline) {
+export default function overview(replay, timeline) {
   const players = {};
 
   for (const player of [PLAYER_1, PLAYER_2]) {
@@ -56,8 +57,10 @@ export default function overview(timeline) {
     const militaryPerformance = roundScore(militaryCapacity * fight.opponent.value * fight.player.kill / (fight.player.value + 1) / (fight.opponent.kill + 1));
     const economyCapacity = roundScore(work / time);
     const economyPerformance = roundScore(ECONOMY_COEFFICIENT * wealth / time);
+    const technologyCapacity = roundScore(TECHNOLOGY_COEFFICIENT * getUniqueUnitCount(replay, player));
+    const technologyPerformance = technologyCapacity;
 
-    players[player] = { armyBuild, militaryCapacity, militaryPerformance, economyCapacity, economyPerformance };
+    players[player] = { armyBuild, militaryCapacity, militaryPerformance, economyCapacity, economyPerformance, technologyCapacity, technologyPerformance };
   }
 
   return { players: players };
@@ -65,4 +68,16 @@ export default function overview(timeline) {
 
 function roundScore(score) {
   return Math.floor(Math.min(score, 100));
+}
+
+function getUniqueUnitCount(replay, pid) {
+  const types = new Set();
+
+  for (const unit of replay.units.values()) {
+    if (unit.owner == pid) {
+      types.add(unit.type);
+    }
+  }
+
+  return types.size;
 }
