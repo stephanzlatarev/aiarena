@@ -1,6 +1,13 @@
 import * as React from "react";
-import { useAsyncValue } from "react-router-dom";
+import { useAsyncValue, Link as RouterLink } from "react-router-dom";
 import Link from "@mui/material/Link";
+import Paper from "@mui/material/Paper";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
 import Rating from "./Rating";
 
@@ -10,6 +17,10 @@ const MILITARY_COEFFICIENT = 100 / 16000;
 const ECONOMY_COEFFICIENT = 100 / 100;
 const WARRIORS = MILITARY_COEFFICIENT / 100;
 const WORKERS = ECONOMY_COEFFICIENT / 100;
+
+const COLOR_GRAY = "gray";
+const COLOR_GREEN = "#00AA00";
+const COLOR_RED = "#AA0000";
 
 export default function Match({ bot }) {
   const match = useAsyncValue();
@@ -26,13 +37,14 @@ export default function Match({ bot }) {
   if (playerMap.reverse) infos.reverse();
 
   if (width > 0) {
-    elements.push(<h3 key="heading-timeline">Timeline</h3>);
+    elements.push(<h3 key="heading-timeline">Timeline (military in red, economy in green)</h3>);
     elements.push(<Timeline key="timeline" match={ match } playerMap={ playerMap } width={ width } />);
   }
 
   return (
     <div ref={ ref } width="100%">
       <div style={{ width: "100%", textAlign: "center", padding: "5px" }}>
+        Round: { match.round } &nbsp;
         Match: { match.match } &nbsp;
         Time: { new Date(match.time).toLocaleString() } &nbsp;
         Map: { match.map } &nbsp;
@@ -43,6 +55,9 @@ export default function Match({ bot }) {
       <div width="100%">
         { infos }
       </div>
+
+      <h3 key="heading-timeline">History by round (same map)</h3>
+      <History bot={ bot } match={ match } />
 
       { elements }
     </div>
@@ -87,6 +102,70 @@ function BotInfo({ info, winner, reverse }) {
     <div style={{ display: "inline-block", verticalAlign: "top", width: "50%", padding: "1rem" }}>
       { infos }
     </div>
+  );
+}
+
+function getMaxRound(matches) {
+  let max = 0;
+
+  for (const match of matches) {
+    max = Math.max(match.round, max);
+  }
+
+  return max;
+}
+
+function History({ bot, match }) {
+  const headers = Array(getMaxRound(match.history));
+  const cells = Array(headers.length);
+  const map = new Map();
+  let key = 1;
+
+  for (const one of match.history) {
+    map.set(one.round, one);
+  }
+
+  for (let i = 0; i < headers.length; i++) {
+    const round = i + 1;
+    const match = map.get(round);
+
+    headers[i] = (<TableCell key={ key++ } style={{ textAlign: "center" }}>{ round }</TableCell>);
+
+    if (match) {
+      const path = "/bot/" + bot + "/match/" + match.match;
+      let status = COLOR_GRAY;
+
+      if (bot === match.winner) {
+        status = COLOR_GREEN;
+      } else if (match.winner && match.winner.length) {
+        status = COLOR_RED;
+      }
+
+      cells[i] = (
+        <TableCell key={ key++ } style={{ textAlign: "center" }}>
+          <RouterLink to={ path } style={{ textDecoration: "none", color: status }}>&#11044;</RouterLink>
+        </TableCell>
+      );
+    } else {
+      cells[i] = (<TableCell key={ key++ } style={{ textAlign: "center" }}>-</TableCell>);
+    }
+  }
+
+  return (
+    <TableContainer component={ Paper }>
+      <Table>
+        <TableHead>
+          <TableRow>
+            { headers }
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            { cells }
+          </TableRow>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 
