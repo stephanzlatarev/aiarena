@@ -38,5 +38,14 @@ export async function storeMatch(match) {
 }
 
 export async function storeRanking(ranking) {
-  await (await connect("rankings")).updateOne({ id: ranking.id }, { $set: ranking }, { upsert: true });
+  await (await connect("rankings")).updateOne({ bot: ranking.bot }, { $set: ranking }, { upsert: true });
+}
+
+export async function traverseMatches(projection, handle) {
+  const matches = await connect("matches");
+  const cursor = matches.find({}).project({ ...projection, _id: 0 });
+
+  while (await cursor.hasNext()) {
+    handle(await cursor.next());
+  }
 }

@@ -1,6 +1,6 @@
 import fs from "fs";
 import https from "https";
-import { readProgress, storeMatch, storeProgress, storeRanking } from "./mongo.js";
+import { readProgress, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
 import Replay from "./replay/replay.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
@@ -60,16 +60,19 @@ function call(method, path, data) {
 }
 
 async function go() {
-  console.log("Connecting to AI Arena...");
+  console.log(new Date().toISOString(), "Connecting to AI Arena...");
   await call("POST", "/api/auth/login/", SECRETS);
 
-  console.log("Updating rankings...");
+  console.log(new Date().toISOString(), "Updating rankings...");
   await processRankings(COMPETITION);
 
-  console.log("Updating matches...");
+  console.log(new Date().toISOString(), "Updating matches...");
   await processRounds(COMPETITION);
 
-  console.log("Done.");
+  console.log(new Date().toISOString(), "Updating overviews...");
+  await processOverviews();
+
+  console.log(new Date().toISOString(), "Done.");
   process.exit(0);
 }
 
@@ -204,6 +207,93 @@ async function processRankings(competition) {
       division: one.division_num,
       lastUpdate: bot.bot_zip_updated,
     });
+  }
+}
+
+function addToOverview(overviews, player, key, value) {
+  if ((value >= 0) || Array.isArray(value)) {
+    let overview = overviews.get(player);
+
+    if (!overview) {
+      overview = {};
+      overviews.set(player, overview);
+    }
+
+    let list = overview[key];
+
+    if (!list) {
+      list = [];
+      overview[key] = list;
+    }
+
+    list.push(Array.isArray(value) ? value.join("|") : value);
+  }
+}
+
+function findAverage(list) {
+  if (!list) return 0;
+
+  let sum = 0;
+
+  for (const one of list) {
+    sum += one;
+  }
+
+  return sum / list.length;
+}
+
+function findMostFrequent(list) {
+  if (!list.length) return [];
+
+  const counts = new Map();
+  const order = [];
+
+  for (const one of list) {
+    let count = counts.get(one);
+
+    if (count) {
+      counts.set(one, count + 1);
+    } else {
+      counts.set(one, 1);
+    }
+  }
+
+  for (const [key, count] of counts) {
+    order.push({ key, count });
+  }
+  order.sort((a, b) => (b.count - a.count));
+
+  return order.map(one => one.key)[0].split("|");
+}
+
+async function processOverviews() {
+  const overviews = new Map();
+  const keys = [
+    "armyBuild",
+    "militaryCapacity", "militaryPerformance",
+    "economyCapacity", "economyPerformance",
+    "technologyCapacity", "technologyPerformance"
+  ];
+
+  await traverseMatches({ player1: 1, player2: 1, overview: 1 }, function(match) {
+    if (match.overview) {
+      for (const key of keys) {
+        addToOverview(overviews, match.player1, key, match.overview.players[1][key]);
+        addToOverview(overviews, match.player2, key, match.overview.players[2][key]);
+      }
+    }
+  });
+
+  for (const [player, overview] of overviews) {
+    for (const key of keys) {
+      if (key === "armyBuild") {
+        overview[key] = findMostFrequent(overview[key]);
+      } else {
+        overview[key] = findAverage(overview[key]);
+      }
+    }
+
+    await storeRanking({ ...overview, bot: player });
   }
 }
 
