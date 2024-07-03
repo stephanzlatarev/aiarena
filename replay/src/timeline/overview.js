@@ -7,7 +7,8 @@ const STATS_PER_MINUTE = LOOPS_PER_MINUTE / 160;
 const PLAYER_1 = 1;
 const PLAYER_2 = 2;
 
-const ECONOMY_COEFFICIENT = 100 / 72;
+const INITIAL_WEALTH = 1000;
+const ECONOMY_COEFFICIENT = 100 / 6000;
 const MILITARY_COEFFICIENT = 100 / 16000;
 
 export default function overview(timeline) {
@@ -27,7 +28,7 @@ export default function overview(timeline) {
       if (point.type === "stats") {
         time += 1 / STATS_PER_MINUTE;
         work += currentPlayerInfo.resources.activeWorkers / STATS_PER_MINUTE;
-        wealth = currentPlayerInfo.resources.totalValue;
+        wealth = currentPlayerInfo.resources.totalValue - INITIAL_WEALTH;
 
         if (currentPlayerInfo.resources.activeForces >= build.value) {
           build.army = currentPlayerInfo.army;
@@ -51,13 +52,17 @@ export default function overview(timeline) {
     }
 
     const armyBuild = getArmyBuild(build.army);
-    const militaryCapacity = Math.floor(MILITARY_COEFFICIENT * fight.player.value);
-    const militaryPerformance = Math.floor(Math.min(militaryCapacity * fight.opponent.value * fight.player.kill / (fight.player.value + 1) / (fight.opponent.kill + 1), 100));
-    const economyCapacity = Math.floor(ECONOMY_COEFFICIENT * work / time);
-    const economyPerformance = Math.floor(ECONOMY_COEFFICIENT * wealth / work);
+    const militaryCapacity = roundScore(MILITARY_COEFFICIENT * fight.player.value);
+    const militaryPerformance = roundScore(militaryCapacity * fight.opponent.value * fight.player.kill / (fight.player.value + 1) / (fight.opponent.kill + 1));
+    const economyCapacity = roundScore(work / time);
+    const economyPerformance = roundScore(ECONOMY_COEFFICIENT * wealth / time);
 
     players[player] = { armyBuild, militaryCapacity, militaryPerformance, economyCapacity, economyPerformance };
   }
 
   return { players: players };
+}
+
+function roundScore(score) {
+  return Math.floor(Math.min(score, 100));
 }
