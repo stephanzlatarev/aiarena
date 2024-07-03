@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useAsyncValue, Link as RouterLink } from "react-router-dom";
+import { useAsyncValue } from "react-router-dom";
 import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -9,6 +9,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
+import MatchCell from "./MatchCell";
 import Rating from "./Rating";
 
 const LOOPS_PER_SECOND = 22.4;
@@ -17,10 +18,6 @@ const MILITARY_COEFFICIENT = 100 / 16000;
 const ECONOMY_COEFFICIENT = 100 / 100;
 const WARRIORS = MILITARY_COEFFICIENT / 100;
 const WORKERS = ECONOMY_COEFFICIENT / 100;
-
-const COLOR_GRAY = "gray";
-const COLOR_GREEN = "#00AA00";
-const COLOR_RED = "#AA0000";
 
 export default function Match({ bot }) {
   const match = useAsyncValue();
@@ -32,11 +29,13 @@ export default function Match({ bot }) {
 
   React.useEffect(() => setWidth(ref.current ? ref.current.offsetWidth : 0), [ref.current]);
 
-  infos.push(<BotInfo key="player1-info" info={ { ...match.player1.ranking, ...match.overview.players[1] } } winner={ match.winner } reverse={ !playerMap.reverse } />);
-  infos.push(<BotInfo key="player2-info" info={ { ...match.player2.ranking, ...match.overview.players[2] } } winner={ match.winner } reverse={ playerMap.reverse } />);
-  if (playerMap.reverse) infos.reverse();
+  if (match.overview) {
+    infos.push(<BotInfo key="player1-info" info={ { ...match.player1.ranking, ...match.overview.players[1] } } winner={ match.winner } reverse={ !playerMap.reverse } />);
+    infos.push(<BotInfo key="player2-info" info={ { ...match.player2.ranking, ...match.overview.players[2] } } winner={ match.winner } reverse={ playerMap.reverse } />);
+    if (playerMap.reverse) infos.reverse();
+  }
 
-  if (width > 0) {
+  if (match.timeline && (width > 0)) {
     elements.push(<h3 key="heading-timeline">Timeline (military in red, economy in green)</h3>);
     elements.push(<Timeline key="timeline" match={ match } playerMap={ playerMap } width={ width } />);
   }
@@ -49,7 +48,8 @@ export default function Match({ bot }) {
         Time: { new Date(match.time).toLocaleString() } &nbsp;
         Map: { match.map } &nbsp;
         Duration: { clock(match.duration) } &nbsp;
-        <Link href={ "https://aiarena.net/matches/" + match.match } target="_blank" rel="noopener">Download replay</Link>
+        <Link href={ "https://aiarena.net/matches/" + match.match } target="_blank" rel="noopener">Download replay</Link> &nbsp;
+        { match.warnings.join(" ") } &nbsp;
       </div>
 
       <div width="100%">
@@ -130,25 +130,7 @@ function History({ bot, match }) {
     const match = map.get(round);
 
     headers[i] = (<TableCell key={ key++ } style={{ textAlign: "center" }}>{ round }</TableCell>);
-
-    if (match) {
-      const path = "/bot/" + bot + "/match/" + match.match;
-      let status = COLOR_GRAY;
-
-      if (bot === match.winner) {
-        status = COLOR_GREEN;
-      } else if (match.winner && match.winner.length) {
-        status = COLOR_RED;
-      }
-
-      cells[i] = (
-        <TableCell key={ key++ } style={{ textAlign: "center" }}>
-          <RouterLink to={ path } style={{ textDecoration: "none", color: status }}>&#11044;</RouterLink>
-        </TableCell>
-      );
-    } else {
-      cells[i] = (<TableCell key={ key++ } style={{ textAlign: "center" }}>-</TableCell>);
-    }
+    cells[i] = (<MatchCell key={ key++ } bot={ bot } match={ match } />);
   }
 
   return (

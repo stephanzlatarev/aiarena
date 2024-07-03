@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import { Route, RouterProvider, Outlet, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
-import { Await, defer, useAsyncValue, useLoaderData } from "react-router-dom";
+import { Route, RouterProvider, Outlet, createBrowserRouter, createRoutesFromElements, useLocation } from "react-router-dom";
+import { Await, defer, useLoaderData } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import Container from "@mui/material/Container";
 import { ThemeProvider } from "@mui/material/styles";
@@ -17,6 +17,9 @@ const rootElement = document.getElementById("root");
 const root = ReactDOM.createRoot(rootElement);
 
 function Frame() {
+  const location = useLocation();
+  React.useEffect(() => { window.scrollTo(0,0); }, [location]);
+
   return (
     <Container maxWidth={ false }>
       <Header />

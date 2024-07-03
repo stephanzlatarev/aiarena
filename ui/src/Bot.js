@@ -10,14 +10,16 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
+import MatchCell from "./MatchCell";
 import Rating from "./Rating";
 
 export default function Bot() {
   const { bot, matches } = useAsyncValue();
   const [tab, setTab] = React.useState("1");
 
-  const worstMatches = matches.map((match) => addScore(bot, match)).filter(match => (match.score < 0)).sort(orderByScore);
-  worstMatches.length = 30;
+  for (const match of matches) {
+    addScore(bot, match);
+  }
 
   return (
     <Paper elevation={ 3 }>
@@ -25,9 +27,11 @@ export default function Bot() {
         <Tab label="Rounds" value="1" />
         <Tab label="Worst matches" value="2" />
       </Tabs>
-      <TabPanel tab={ tab } index="1">Rounds</TabPanel>
+      <TabPanel tab={ tab } index="1">
+        <Rounds bot={ bot } matches={ matches } />
+      </TabPanel>
       <TabPanel tab={ tab } index="2">
-        <MatchList bot={ bot } matches={ worstMatches } />
+        <MatchList bot={ bot } matches={ matches } />
       </TabPanel>
     </Paper>
   );
@@ -45,8 +49,80 @@ function TabPanel({ children, tab, index }) {
   return null;
 }
 
+function Rounds({ bot, matches }) {
+  const cols = [];
+  const rows = [];
+  const style = { margin: "0px", padding: "1px", textAlign: "center" };
+  const opponents = new Map();
+  let rounds = 0;
+  let key = 1;
+
+  for (const match of matches) {
+    let list = opponents.get(match.opponent);
+
+    if (!list) {
+      list = [];
+      opponents.set(match.opponent, list);
+    }
+
+    rounds = Math.max(match.round, rounds);
+    list[match.round] = (<MatchCell key={ key++ } bot={ bot } match={ match } style={ style } />);
+  }
+
+  const opponentNames = [...opponents.keys()].sort();
+
+  for (const opponent of opponentNames) {
+    cols.push(<TableCell key={ key++ } style={{ ...style, writingMode: "vertical-lr", textOrientation: "sideways", textAlign: "right", paddingBottom: "0.5rem" }}>{ opponent }</TableCell>);
+  }
+
+  for (let i = rounds - 1; i >= 0; i--) {
+    const round = i + 1;
+    const opponentCols = [];
+    let hasOpponentsInThisRound = false;
+
+    for (const opponent of opponentNames) {
+      const list = opponents.get(opponent);
+
+      if (list && list[round]) {
+        opponentCols.push(list[round]);
+        hasOpponentsInThisRound = true;
+      } else {
+        opponentCols.push(<TableCell key={ key++ }></TableCell>);
+      }
+    }
+
+    if (hasOpponentsInThisRound) {
+      rows.push(
+        <TableRow key={ key++ }>
+          <TableCell style={ style }>{ round }</TableCell>
+          { opponentCols }
+        </TableRow>
+      );
+    }
+  }
+
+  return (
+    <TableContainer component={ Paper }>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell style={ style }>Round</TableCell>
+            { cols }
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          { rows }
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
 function MatchList({ bot, matches }) {
-  const rows = matches.map(match => (
+  const worst = matches.filter(match => (match.score < 0)).sort(orderByScore);
+  worst.length = 30;
+
+  const rows = worst.map(match => (
     <TableRow key={ match.match }>
       <TableCell><Link to={ "/bot/" + bot + "/match/" + match.match }>{ match.match }</Link></TableCell>
       <TableCell>{ match.round }</TableCell>
@@ -89,22 +165,21 @@ function MatchList({ bot, matches }) {
 }
 
 function addScore(bot, match) {
-  if (match.warnings.length) {
-    match.score = 0;
-  } else if (match.winner === bot) {
-    match.score = 1;
-  } else if (match.overview) {
-    const overview = (match.player1 === bot) ? match.overview.players[1] : match.overview.players[2];
+  match.opponent = (match.player1 === bot) ? match.player2 : match.player1;
 
-    if (overview) {
-      const opponent = (match.player1 === bot) ? match.overview.players[2] : match.overview.players[1];
+  if (match.overview) {
+    match.overview.own = (match.player1 === bot) ? match.overview.players[1] : match.overview.players[2];
+    match.overview.opponent = (match.player1 === bot) ? match.overview.players[2] : match.overview.players[1];
 
-      overview.score = (overview.militaryPerformance + overview.economyPerformance) / 2;
-      match.opponent = (match.player1 === bot) ? match.player2 : match.player1;
-      match.overview.own = overview;
-      match.overview.opponent = opponent;
-      match.score = overview.score - 100;
+    if (match.overview.own) {
+      match.score = (match.overview.own.militaryPerformance + match.overview.own.economyPerformance) / 2;
     }
+  }
+
+  if (!match.winner || match.warnings.length) {
+    match.score = 0;
+  } else if (match.winner !== bot) {
+    match.score = match.score - 100;
   }
 
   return match;
