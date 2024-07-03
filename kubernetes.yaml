@@ -71,7 +71,7 @@ spec:
       parallelism: 1
       completions: 1
       backoffLimit: 1
-      ttlSecondsAfterFinished: 180
+      ttlSecondsAfterFinished: 600
       template:
         spec:
           restartPolicy: Never

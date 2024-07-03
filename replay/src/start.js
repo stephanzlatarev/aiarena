@@ -108,6 +108,7 @@ async function getMatches(round) {
         map: match.map,
         player1: match.result.bot1_name,
         player2: match.result.bot2_name,
+        duration: match.result.game_steps,
         winner: winner,
         replay: match.result.replay_file,
       };
@@ -123,9 +124,13 @@ async function processRounds(competition) {
   const round = await getRoundInProgress(competition, progress);
 
   if (round) {
+    console.log("Round", round.number);
+
     let isRoundComplete = true;
 
     for (const match of await getMatches(round.id)) {
+      console.log("Match:", match.id);
+
       let warnings;
       let timeline;
       let overview;
@@ -137,8 +142,6 @@ async function processRounds(competition) {
           warnings = [...replay.warnings];
           timeline = getTimeline(replay);
           overview = getOverview(timeline);
-
-          console.log("Match:", match.id);
         } catch (error) {
           console.log(error.message);
 
@@ -168,8 +171,6 @@ async function processRounds(competition) {
       progress.rounds[round.number] = true;
 
       await storeProgress(progress);
-
-      console.log("Round", round.number);
     }
   }
 }
