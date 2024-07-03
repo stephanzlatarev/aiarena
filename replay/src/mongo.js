@@ -11,7 +11,7 @@ async function connect(collection) {
     const aiarena = client.db("aiarena");
     const matchIndexes = await aiarena.collection("matches").listIndexes().toArray();
 
-    if (matchIndexes < 4) {
+    if (matchIndexes.length < 4) {
       console.log("Competition index created:", await aiarena.collection("progress").createIndex({ competition: 1 }));
       console.log("Rankings index by id created:", await aiarena.collection("rankings").createIndex({ id: 1 }));
       console.log("Rankings index by name created:", await aiarena.collection("rankings").createIndex({ bot: 1 }));
