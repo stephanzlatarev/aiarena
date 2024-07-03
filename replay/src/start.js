@@ -5,7 +5,7 @@ import Replay from "./replay/replay.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
 
-const VERSION = 1;
+const VERSION = 2;
 const COMPETITION = 27;
 
 const TRACE = false;
@@ -89,8 +89,10 @@ async function getRounds(competition) {
 }
 
 async function getRoundInProgress(competition, progress) {
-  for (const round of await getRounds(competition)) {
-    if (!progress.rounds[round.number]) return round;
+  const rounds = await getRounds(competition);
+
+  for (const round of rounds) {
+    if (progress.rounds[round.number] !== true) return round;
   }
 }
 
@@ -126,9 +128,16 @@ async function processRounds(competition) {
   if (round) {
     console.log("Round", round.number);
 
-    let isRoundComplete = true;
+    const matches = await getMatches(round.id);
+    let isRoundComplete = round.complete;
 
-    for (const match of await getMatches(round.id)) {
+    if (!Array.isArray(progress.rounds[round.number])) {
+      progress.rounds[round.number] = [];
+    }
+
+    for (const match of matches) {
+      if (progress.rounds[round.number].indexOf(match.id) >= 0) continue;
+
       console.log("Match:", match.id);
 
       let warnings;
@@ -141,7 +150,7 @@ async function processRounds(competition) {
   
           warnings = [...replay.warnings];
           timeline = getTimeline(replay);
-          overview = getOverview(timeline);
+          overview = getOverview(replay, timeline);
         } catch (error) {
           console.log(error.message);
 
@@ -149,6 +158,7 @@ async function processRounds(competition) {
         }
       } else {
         isRoundComplete = false;
+        warnings = ["No replay file."];
       }
 
       await storeMatch({
@@ -165,13 +175,15 @@ async function processRounds(competition) {
         overview: overview,
         timeline: timeline,
       });
+
+      progress.rounds[round.number].push(match.id);
     }
 
     if (isRoundComplete) {
       progress.rounds[round.number] = true;
-
-      await storeProgress(progress);
     }
+
+    await storeProgress(progress);
   }
 }
 
