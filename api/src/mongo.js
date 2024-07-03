@@ -23,7 +23,12 @@ export async function getBotInfo(bot) {
   const matches = await connect("matches");
   const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, player1: 1, player2: 1, winner: 1, replay: 1, warnings: 1, overview: 1 };
 
-  const cursor = matches.find({ player1: bot }).project(matchProjection);
+  let cursor = matches.find({ player1: bot }).project(matchProjection);
+  while (await cursor.hasNext()) {
+    info.matches.push(await cursor.next());
+  }
+
+  cursor = matches.find({ player2: bot }).project(matchProjection);
   while (await cursor.hasNext()) {
     info.matches.push(await cursor.next());
   }
