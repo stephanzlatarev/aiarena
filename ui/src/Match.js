@@ -85,8 +85,8 @@ function BotInfo({ info, winner, reverse }) {
       <div style={{ color: resultColor, fontSize: "1.5rem", fontWeight: "bold", textAlign: "center" }}>{ resultText }</div>
       Military: <Rating capacity={ info.militaryCapacity } performance={ info.militaryPerformance } /> <br />
       Economy: <Rating capacity={ info.economyCapacity } performance={ info.economyPerformance } /> <br />
-      Technology: <Rating capacity={ info.technologyCapacity } performance={ info.technologyPerformance } /> <br />
-      Best army: <Army army={ info.armyBuild } />
+      Technology: <Rating capacity={ info.technologyCapacity } performance={ info.technologyPerformance } />
+      <Army army={ info.armyBuild } />
     </div>
   );
 
@@ -200,38 +200,23 @@ function Timeline({ match, playerMap, width }) {
 
       height += 16;
 
+      console.log("FIGHT", clock(event.loop), "height:", height, "color:", color);
       divs.center.push(
-        <div top={ height } style={{ color: color, fontSize: "3rem" }}>
+        <div top={ height } style={{ color: color, fontSize: "3rem", backgroundColor: "rgba(255, 255, 255, 0.9)" }}>
           &#9876;
         </div>
       );
-
-      const leftPlayerScore = score(event, leftPlayer);
-      divs.left.push(
-        <div top={ height }>
-          Army: <Army army={ event.players[leftPlayer].army } /> <br />
-          Military score: <Rating capacity={ leftPlayerScore.capacity } performance={ leftPlayerScore.performance } /> <br />
-          Losses: <Army army={ event.players[leftPlayer].losses } />
-        </div>
-      );
-
-      const rightPlayerScore = score(event, rightPlayer);
-      divs.right.push(
-        <div top={ height }>
-          Army: <Army army={ event.players[rightPlayer].army } /> <br />
-          Military score: <Rating capacity={ rightPlayerScore.capacity } performance={ rightPlayerScore.performance } /> <br />
-          Losses: <Army army={ event.players[rightPlayer].losses } />
-        </div>
-      );
+      divs.left.push(CombatCard(height, event.players[leftPlayer], score(event, leftPlayer)));
+      divs.right.push(CombatCard(height, event.players[rightPlayer], score(event, rightPlayer)));
 
       pathop = "L";
       height += 80;
     }
   }
 
-  const leftSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "right", marginRight: "60%", backgroundColor: "rgba(255, 255, 255, 0.9)" };
-  const centerSideStyle = { position: "absolute", left: 0, width: "6%", display: "flex", justifyContent: "center", marginLeft: "47%", marginRight: "47%", backgroundColor: "rgba(255, 255, 255, 0.9)" };
-  const rightSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "left", marginLeft: "60%", backgroundColor: "rgba(255, 255, 255, 0.9)" };
+  const leftSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "right", marginRight: "60%" };
+  const centerSideStyle = { position: "absolute", left: 0, width: "6%", display: "flex", justifyContent: "center", marginLeft: "47%", marginRight: "47%" };
+  const rightSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "left", marginLeft: "60%" };
 
   return (
     <div width="100%" style={{ position: "relative" }}>
@@ -248,21 +233,41 @@ function Timeline({ match, playerMap, width }) {
   );
 }
 
+const combatCardStyle = {
+  display: "flex", flexDirection: "column", alignItems: "center",
+  border: "solid darkGray", borderRadius: "12px", padding: "0px 12px",
+  backgroundColor: "rgba(255, 255, 255, 0.9)"
+};
+
+function CombatCard(top, fight, score) {
+  return (
+    <div top={ top } style={ combatCardStyle }>
+      <Army army={ fight.army } />
+      <Rating capacity={ score.capacity } performance={ score.performance } />
+      <Army army={ fight.losses } loss="true" />
+    </div>
+  );
+}
+
 function createPlayerMap(bot, match) {
   if (bot === match.player1.bot) {
     return { 1: 1, 2: 2, side1: -1, side2: +1, color1: "#00AA00", color2: "#AA0000", reverse: false };
   } else {
-    return { 1: 2, 2: 1, side1: +1, side2: -1, color1: "#AA00", color2: "#00AA00", reverse: true };
+    return { 1: 2, 2: 1, side1: +1, side2: -1, color1: "#AA0000", color2: "#00AA00", reverse: true };
   }
 }
 
 function clock(loop) {
-  const minutes = Math.floor(loop / LOOPS_PER_MINUTE);
-  const seconds = Math.floor(loop / LOOPS_PER_SECOND) % 60;
-  const mm = (minutes >= 10) ? minutes : "0" + minutes;
-  const ss = (seconds >= 10) ? seconds : "0" + seconds;
+  if (loop >= 0) {
+    const minutes = Math.floor(loop / LOOPS_PER_MINUTE);
+    const seconds = Math.floor(loop / LOOPS_PER_SECOND) % 60;
+    const mm = (minutes >= 10) ? minutes : "0" + minutes;
+    const ss = (seconds >= 10) ? seconds : "0" + seconds;
 
-  return `${mm}:${ss}`;
+    return `${mm}:${ss}`;
+  }
+
+  return "Unknown";
 }
 
 function score(fight, player) {
