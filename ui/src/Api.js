@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "http://aiarena.superskill.me/api/";
+const API = "https://aiarena.superskill.me/api/";
 const CACHE_LIMIT = 50;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
