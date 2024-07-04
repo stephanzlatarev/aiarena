@@ -56,7 +56,7 @@ export default function Match({ bot }) {
         { infos }
       </div>
 
-      <h3 key="heading-timeline">History by round (same map; wins in green, losses in red)</h3>
+      <h3 key="heading-timeline">History by round (wins in green, losses in red)</h3>
       <History bot={ bot } match={ match } />
 
       { elements }

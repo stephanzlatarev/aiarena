@@ -55,14 +55,14 @@ export async function getMatchInfo(match) {
       bot: matchInfo.player2,
       ranking: await rankings.findOne({ bot: matchInfo.player2 }),
     },
-    history: [...(await listMatches(matches, matchInfo.map, matchInfo.player1, matchInfo.player2)), ...(await listMatches(matches, matchInfo.map, matchInfo.player2, matchInfo.player1))],
+    history: [...(await listMatches(matches, matchInfo.player1, matchInfo.player2)), ...(await listMatches(matches, matchInfo.player2, matchInfo.player1))],
   };
 }
 
-async function listMatches(matches, map, player1, player2) {
+async function listMatches(matches, player1, player2) {
   const list = [];
   const projection = { _id: 0, round: 1, match: 1, time: 1, map: 1, winner: 1, warnings: 1 };
-  const cursor = matches.find({ map: map, player1: player1, player2: player2 }).project(projection);
+  const cursor = matches.find({ player1: player1, player2: player2 }).project(projection);
 
   while (await cursor.hasNext()) {
     list.push(await cursor.next());
