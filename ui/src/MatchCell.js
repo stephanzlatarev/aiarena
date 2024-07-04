@@ -27,7 +27,7 @@ export default function MatchCell({ bot, match, text, style }) {
     if (text) {
       linkStyle.backgroundColor = status;
       linkStyle.color = "white";
-      linkStyle.padding = "3px";
+      linkStyle.padding = (String(text).length > 1) ? "3px" : "3px 7px";
       linkStyle.borderRadius = "3px";
 
       return (
