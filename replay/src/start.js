@@ -91,12 +91,24 @@ async function getRounds(competition) {
   return (await call("GET", "/api/rounds/?limit=1000&competition=" + competition)).results.sort((a, b) => (a.number - b.number));
 }
 
-async function getRoundInProgress(competition, progress) {
+// Pick at most 3 rounds to process in this iteration of the job
+// The ladder usually has 2 rounds open with only a few new matches completed in the last 10 minutes
+// We pick the 2 rounds and 1 more with previous parsing version prioritizing the later rounds by number
+async function pickRoundsInProgress(competition, progress) {
   const rounds = await getRounds(competition);
+  const picks = [];
+
+  rounds.sort((a, b) => (b.number - a.number));
 
   for (const round of rounds) {
-    if (progress.rounds[round.number] !== true) return round;
+    if (progress.rounds[round.number] !== VERSION) {
+      picks.push(round);
+    }
+
+    if (picks.length >= 3) break;
   }
+
+  return picks;
 }
 
 async function getMatches(round) {
@@ -122,24 +134,22 @@ async function getMatches(round) {
 
 async function processRounds(competition) {
   const maps = await getMaps();
+  const progress = (await readProgress(competition)) || { competition: competition, rounds: {} };
+  const rounds = await pickRoundsInProgress(competition, progress);
 
-  let progress = await readProgress(competition);
-  if (!progress || (progress.version !== VERSION)) progress = { version: VERSION, competition: competition, rounds: {} };
-
-  const round = await getRoundInProgress(competition, progress);
-
-  if (round) {
+  for (const round of rounds) {
     console.log("Round", round.number);
 
     const matches = await getMatches(round.id);
+    let tracker = progress.rounds[round.number];
     let isRoundComplete = round.complete;
 
-    if (!Array.isArray(progress.rounds[round.number])) {
-      progress.rounds[round.number] = [];
+    if (!tracker || (tracker.version !== VERSION)) {
+      tracker = { version: VERSION, matches: [] };
     }
 
     for (const match of matches) {
-      if (progress.rounds[round.number].indexOf(match.id) >= 0) continue;
+      if (tracker.matches.indexOf(match.id) >= 0) continue;
 
       console.log("Match:", match.id);
 
@@ -179,12 +189,10 @@ async function processRounds(competition) {
         timeline: timeline,
       });
 
-      progress.rounds[round.number].push(match.id);
+      tracker.matches.push(match.id);
     }
 
-    if (isRoundComplete) {
-      progress.rounds[round.number] = true;
-    }
+    progress.rounds[round.number] = isRoundComplete ? VERSION : tracker;
 
     await storeProgress(progress);
   }
