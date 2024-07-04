@@ -5,7 +5,7 @@ import Replay from "./replay/replay.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
 
-const VERSION = 2;
+const VERSION = 3;
 const COMPETITION = 27;
 
 const TRACE = false;

@@ -14,7 +14,17 @@ export default class Replay {
 
     try {
       readTrackerEvents(collector.source(), this, mpq.read("replay.tracker.events"));
-      readGameEvents(collector.source(), this, mpq.read("replay.game.events"));
+
+      try {
+        // Read the file first so that in case of error the source is not added to the collector
+        const events = mpq.read("replay.game.events");
+        const source = collector.source();
+
+        readGameEvents(source, this, events);
+      } catch (error) {
+        this.warnings.add("Unable to read some of the game events!");
+        console.log("Error when reading game events file:", error.message);
+      }
 
       await collector.collect();
     } finally {

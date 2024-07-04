@@ -18,7 +18,7 @@ async function connect(collection) {
       console.log("Match index by id created:", await aiarena.collection("matches").createIndex({ match: 1 }));
       console.log("Match index by player1 created:", await aiarena.collection("matches").createIndex({ player1: 1 }));
       console.log("Match index by player2 created:", await aiarena.collection("matches").createIndex({ player2: 1 }));
-      console.log("Match index by map and players created:", await aiarena.collection("matches").createIndex({ map: 1, player1: 1, player2: 1 }));
+      console.log("Match index by both players created:", await aiarena.collection("matches").createIndex({ player1: 1, player2: 1 }));
     }
   }
 

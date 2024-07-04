@@ -119,7 +119,7 @@ async function readCommandEvent(events, replay, decoder, loop, player, unitTag) 
 
     event = createEvent(abilityLink, abilityCommandIndex, loop, player, unitTag);
 
-    if (event === Event.UnknownEvent) replay.warning(`Unsupported ability ${abilityLink}/${abilityCommandIndex}`);
+    if (event === Event.UnknownEvent) replay.warning("Unable to read some of the game events!");
   }
 
   switch (decoder.readBits(2)) {
