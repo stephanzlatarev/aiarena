@@ -1,4 +1,5 @@
 import bodyParser from "body-parser";
+import compression from "compression";
 import cors from "cors";
 import express from "express";
 import { getBotInfo, getMatchInfo, getRankings } from "./mongo.js";
@@ -7,6 +8,7 @@ const port = process.env.PORT || 3000;
 const app = express();
 
 app.disable("x-powered-by");
+app.use(compression());
 
 app.use(cors());
 app.options("*", cors());
