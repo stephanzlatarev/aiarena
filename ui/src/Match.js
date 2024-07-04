@@ -56,7 +56,7 @@ export default function Match({ bot }) {
         { infos }
       </div>
 
-      <h3 key="heading-timeline">History by round (same map)</h3>
+      <h3 key="heading-timeline">History by round (same map; wins in green, losses in red)</h3>
       <History bot={ bot } match={ match } />
 
       { elements }
@@ -106,46 +106,34 @@ function BotInfo({ info, winner, reverse }) {
   );
 }
 
-function getMaxRound(matches) {
-  let max = 0;
-
-  for (const match of matches) {
-    max = Math.max(match.round, max);
-  }
-
-  return max;
-}
-
 function History({ bot, match }) {
-  const headers = Array(getMaxRound(match.history));
-  const cells = Array(headers.length);
-  const map = new Map();
+  const rounds = new Map();
+  const rows = [];
+  let round = 1;
+  let count = 0;
   let key = 1;
 
   for (const one of match.history) {
-    map.set(one.round, one);
+    rounds.set(one.round, one);
   }
 
-  for (let i = 0; i < headers.length; i++) {
-    const round = i + 1;
-    const match = map.get(round);
+  while (count < match.history.length) {
+    const cells = [];
 
-    headers[i] = (<TableCell key={ key++ } style={{ textAlign: "center" }}>{ round }</TableCell>);
-    cells[i] = (<MatchCell key={ key++ } bot={ bot } match={ match } />);
+    for (let c = 0; c < 50; c++, round++) {
+      if (rounds.has(round)) count++;
+
+      cells.push(<MatchCell key={ key++ } bot={ bot } match={ rounds.get(round) } text={ round } />);
+    }
+
+    rows.push(<TableRow key={ key++ }>{ cells }</TableRow>);
   }
 
   return (
     <TableContainer component={ Paper }>
       <Table>
-        <TableHead>
-          <TableRow>
-            { headers }
-          </TableRow>
-        </TableHead>
         <TableBody>
-          <TableRow>
-            { cells }
-          </TableRow>
+          { rows }
         </TableBody>
       </Table>
     </TableContainer>
@@ -200,7 +188,6 @@ function Timeline({ match, playerMap, width }) {
 
       height += 16;
 
-      console.log("FIGHT", clock(event.loop), "height:", height, "color:", color);
       divs.center.push(
         <div top={ height } style={{ color: color, fontSize: "3rem", backgroundColor: "rgba(255, 255, 255, 0.9)" }}>
           &#9876;
