@@ -116,8 +116,16 @@ async function getMatches(round) {
     .filter(match => (match.result && match.result.replay_file))
     .map(function(match) {
       let winner;
+
+      // Check for win of one player
       if (match.result.type === "Player1Win") winner = match.result.bot1_name;
       if (match.result.type === "Player2Win") winner = match.result.bot2_name;
+
+      if (!winner) {
+        // Check for crash, timeout, race mismatch, or surrender of the other player
+        if (match.result.type.startsWith("Player1")) winner = match.result.bot2_name;
+        if (match.result.type.startsWith("Player2")) winner = match.result.bot1_name;
+      }
 
       return {
         id: match.id,
@@ -127,6 +135,7 @@ async function getMatches(round) {
         player2: match.result.bot2_name,
         duration: match.result.game_steps,
         winner: winner,
+        status: match.result.type,
         replay: match.result.replay_file,
       };
     });
