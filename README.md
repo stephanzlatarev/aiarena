@@ -1,4 +1,6 @@
-# aiarena
+# AI Arena Kibitz
+
+Running on https://aiarena.superskill.me
 
 ## Deployment
 
