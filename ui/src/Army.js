@@ -253,7 +253,7 @@ icons.set("Zealot", Zealot);
 icons.set("Zergling", Zergling);
 
 const armyStyle = { position: "relative", display: "flex", alignItems: "center" };
-const iconStyle = { border: "solid goldenrod", borderRadius: "6px", marginRight: "3px" };
+const iconStyle = { border: "solid goldenrod", borderRadius: "6px", marginRight: "3px", width: "28px", height: "28px" };
 const countStyle = { fontSize: "28px" };
 const crossStyle = { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%" };
 
@@ -295,7 +295,7 @@ function UnitIcon({ unit }) {
   const icon = icons.get(name);
 
   if (icon) {
-    return (<img src={ icon } title={ unit } alt={ unit } width="28" style={ iconStyle } />);
+    return (<img src={ icon } title={ unit } alt={ unit } style={ iconStyle } />);
   } else {
     return (<span>{ name }&nbsp;</span>);
   }
