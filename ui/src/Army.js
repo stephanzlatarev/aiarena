@@ -258,7 +258,7 @@ const countStyle = { fontSize: "28px" };
 const crossStyle = { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%" };
 
 export default function Army({ army, loss }) {
-  if (!army) return null;
+  if (!army) return loss ? (<div>No losses</div>) : null;
 
   const elements = [];
   let key = 1;
@@ -277,6 +277,8 @@ export default function Army({ army, loss }) {
   }
 
   if (loss) {
+    if (!elements.length) return (<div>No losses</div>);
+
     elements.push(<Cross key={ key++ } size={ elements.length } />);
   }
 
