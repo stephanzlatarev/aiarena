@@ -111,7 +111,7 @@ function addUnit(collection, type, count) {
 }
 
 function addZone(list, zone) {
-  if (list.indexOf(zone) < 0) {
+  if (zone && (list.indexOf(zone) < 0)) {
     list.push(zone);
   }
 }

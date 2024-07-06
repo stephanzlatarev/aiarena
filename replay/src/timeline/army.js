@@ -1,7 +1,7 @@
 
 const ProtossArmyUnitValue = {
-  // Probe is first with rank 0 so that it is included in army only when there are no other units
-  Probe: 50,
+  // Probe is first with rank 0 and value 0 so that it is included in army only when there are no other units and doesn't count in army value
+  Probe: 0,
 
   // All other units are ordered by their rank
   Carrier: 600,
@@ -27,8 +27,8 @@ const ProtossArmyUnitValue = {
 };
 
 const TerranArmyUnitValue = {
-  // SCV is first with rank 0 so that it is included in army only when there are no other units
-  SCV: 50,
+  // SCV is first with rank 0 and value 0 so that it is included in army only when there are no other units and doesn't count in army value
+  SCV: 0,
 
   // All other units are ordered by their rank
   Battlecruiser: 700,
@@ -55,8 +55,8 @@ const TerranArmyUnitValue = {
 };
 
 const ZergArmyUnitValue = {
-  // Drone is first with rank 0 so that it is included in army only when there are no other units
-  Drone: 50,
+  // Drone is first with rank 0 and value 0 so that it is included in army only when there are no other units and doesn't count in army value
+  Drone: 0,
 
   // All other units are ordered by their rank
   BroodLord: 550,

@@ -21,7 +21,7 @@ const MAP_ZONES = {
   SiteDelta513AIE: SiteDelta513AIE,
 };
 
-const VERSION = 4;
+const VERSION = 5;
 const COMPETITION = 27;
 
 const TRACE = false;
