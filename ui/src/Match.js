@@ -240,9 +240,9 @@ function Timeline({ match, playerMap, width }) {
     }
   }
 
-  const leftSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "right", marginRight: "60%" };
-  const centerSideStyle = { position: "absolute", left: 0, width: "10%", display: "flex", justifyContent: "center", marginLeft: "45%", marginRight: "45%" };
-  const rightSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "left", marginLeft: "60%" };
+  const leftSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "right", marginRight: "66%" };
+  const centerSideStyle = { position: "absolute", left: 0, width: "150px", display: "flex", justifyContent: "center", marginLeft: "calc(50% - 75px)", marginRight: "calc(50% - 75px)" };
+  const rightSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "left", marginLeft: "66%" };
 
   return (
     <div width="100%" style={{ position: "relative" }}>
