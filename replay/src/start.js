@@ -21,7 +21,7 @@ const MAP_ZONES = {
   SiteDelta513AIE: SiteDelta513AIE,
 };
 
-const VERSION = 5;
+const VERSION = 6;
 const COMPETITION = 27;
 
 const TRACE = false;
@@ -278,7 +278,7 @@ function findAverage(list) {
 }
 
 function findMostFrequent(list) {
-  if (!list.length) return [];
+  if (!list || !list.length) return [];
 
   const counts = new Map();
   const order = [];
@@ -298,7 +298,7 @@ function findMostFrequent(list) {
   }
   order.sort((a, b) => (b.count - a.count));
 
-  return order.map(one => one.key)[0].split("|");
+  return order[0].key.split("|");
 }
 
 async function processOverviews() {
@@ -310,11 +310,16 @@ async function processOverviews() {
     "technologyCapacity", "technologyPerformance"
   ];
 
-  await traverseMatches({ player1: 1, player2: 1, overview: 1 }, function(match) {
+  await traverseMatches({ player1: 1, player2: 1, overview: 1, winner: 1 }, function(match) {
     if (match.overview) {
       for (const key of keys) {
-        addToOverview(overviews, match.player1, key, match.overview.players[1][key]);
-        addToOverview(overviews, match.player2, key, match.overview.players[2][key]);
+        if ((key !== "armyBuild") || (match.winner === match.player1)) {
+          addToOverview(overviews, match.player1, key, match.overview.players[1][key]);
+        }
+
+        if ((key !== "armyBuild") || (match.winner === match.player2)) {
+          addToOverview(overviews, match.player2, key, match.overview.players[2][key]);
+        }
       }
     }
   });
