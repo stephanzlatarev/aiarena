@@ -31,8 +31,8 @@ const IMG_SIZE = {
   GoldenAura513AIE: [600, 600],
   Gresvan513AIE: [800, 580],
   HardLead513AIE: [600, 600],
-  Oceanborn513AIE: [551, 599],
-  SiteDelta513AIE: [636, 600],
+  Oceanborn513AIE: [636, 600],
+  SiteDelta513AIE: [551, 599],
 };
 
 export default function Match({ bot }) {
