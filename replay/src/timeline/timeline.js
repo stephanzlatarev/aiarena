@@ -1,136 +1,117 @@
-import { getArmyCount } from "./army.js";
+import { getArmyCount, getArmyValue } from "./army.js";
+import { calculateMilitaryRating } from "./rating.js";
 import Event from "../replay/event.js";
 
-const PART_SIZE = 160;
-const PLAYER_1 = 1;
-const PLAYER_2 = 2;
+const STATS_LOOPS = 160;
+const FIGHT_LOOPS = 60 * 22.4;
+const IS_BASE = { CommandCenter: true, Hatchery: true, Hive: true, Lair: true, Nexus: true, OrbitalCommand: true, PlanetaryFortress: true };
 
-function splitInChunks(events) {
-  const chunks = [];
-  let chunk = [];
-  let endLoop = PART_SIZE;
+export default function timeline(replay, map) {
+  const timeline = [];
 
-  for (const event of events) {
-    if ((event.loop >= endLoop) && (chunk.length)) {
-      chunks.push(chunk);
-      chunk = [];
-      endLoop += PART_SIZE;
+  let stats = { type: "stats", loop: 0, events: [], end: STATS_LOOPS };
+  let fight = { type: "fight", loop: 0, events: [], end: FIGHT_LOOPS, value: 0, loss: 0 };
+
+  for (const event of replay.events) {
+    if (event.loop >= stats.end) {
+      timeline.push(processStats(stats));
+
+      stats = { type: "stats", loop: stats.end, events: [], end: stats.end + STATS_LOOPS };
     }
 
-    if ((event.type !== Event.Count) && (event.type !== Event.Exit)) continue;
+    if (event.loop >= fight.end) {
+      timeline.push(processFight(replay, map, fight));
 
-    chunk.push(event);
+      fight = { type: "fight", loop: fight.end, events: [], end: fight.end + FIGHT_LOOPS };
+    }
+
+    if ((event.type !== Event.Count) && (event.type !== Event.Enter) && (event.type !== Event.Exit)) continue;
+
+    stats.events.push(event);
+    fight.events.push(event);
   }
 
-  if (chunk.length) {
-    chunks.push(chunk);
-  }
+  if (stats.events.length) timeline.push(processStats(stats));
+  if (fight.events.length) timeline.push(processFight(replay, map, fight));
 
-  return chunks;
+  return timeline;
 }
 
-function addLoss(losses, type, count) {
-  if (losses[type]) {
-    losses[type] += count;
-  } else {
-    losses[type] = count;
-  }
-}
+function processStats(stats) {
+  const players = {
+    1: { resources: {} },
+    2: { resources: {} },
+  };
 
-function createPart(replay, chunk) {
-  let loop = Infinity;
-  const players = {};
-
-  players[PLAYER_1] = { army: {}, resources: {}, losses: {} };
-  players[PLAYER_2] = { army: {}, resources: {}, losses: {} };
-
-  for (const event of chunk) {
-    if (event.loop < loop) loop = event.loop;
-
+  for (const event of stats.events) {
     if (event.type === Event.Count) {
       players[event.pid].resources[event.stype] = event.out;
-    } else if (event.type === Event.Exit) {
-      addLoss(players[event.pid].losses, event.stype, 1);
     }
   }
 
-  for (const one in players) {
-    players[one].army = getArmyCount(replay, loop, one);
-  }
+  stats.players = players;
+  delete stats.events;
 
-  return {
-    type: "stats",
-    loop: loop,
-    players: players,
+  return stats;
+}
+
+function processFight(replay, map, fight) {
+  const players = {
+    1: { army: getArmyCount(replay, fight.loop, fight.end, 1), born: {}, died: {}, value: 0, loss: 0, bases: [], zones: [] },
+    2: { army: getArmyCount(replay, fight.loop, fight.end, 2), born: {}, died: {}, value: 0, loss: 0, bases: [], zones: [] },
   };
-}
 
-function createTimeline(replay, chunks) {
-  return chunks.map(chunk => createPart(replay, chunk));
-}
+  for (const event of fight.events) {
+    if (event.type === Event.Enter) {
+      addUnit(players[event.pid].born, event.stype, 1);
+    } else if (event.type === Event.Exit) {
+      addUnit(players[event.pid].died, event.stype, 1);
 
-function addHighlights(replay, timeline) {
-  const highlights = [];
-
-  let previous = null;
-  let fight = null;
-
-  for (const part of timeline) {
-    if (previous) {
-      const currentPlayer1 = part.players[PLAYER_1].resources;
-      const previousPlayer1 = previous.players[PLAYER_1].resources;
-      const currentPlayer2 = part.players[PLAYER_2].resources;
-      const previousPlayer2 = previous.players[PLAYER_2].resources;
-
-      previousPlayer1.valueKilled = currentPlayer1.valueKilled - previousPlayer1.valueKilled;
-      previousPlayer2.valueKilled = currentPlayer2.valueKilled - previousPlayer2.valueKilled;
-
-      if (previousPlayer1.valueKilled && previousPlayer2.valueKilled) {
-        if (fight) {
-          fight.end = part.loop;
-        } else {
-          fight = {
-            type: "fight",
-            loop: previous.loop,
-            end: part.loop,
-            players: {},
-          };
-
-          fight.players[PLAYER_1] = { army: {}, losses: {}, value: 0, kill: 0 };
-          fight.players[PLAYER_2] = { army: {}, losses: {}, value: 0, kill: 0 };
-
-          for (const one in fight.players) {
-            const fightPlayer = fight.players[one];
-            const previousPlayer = previous.players[one];
-
-            fightPlayer.value = previousPlayer.resources.activeForces;
-            fightPlayer.army = getArmyCount(replay, fight.loop, one);
-          }
-
-          highlights.push(fight);
-        }
-
-        for (const one in fight.players) {
-          const fightPlayer = fight.players[one];
-          const previousPlayer = previous.players[one];
-
-          fightPlayer.kill += previousPlayer.resources.valueKilled;
-
-          for (const type in previousPlayer.losses) {
-            addLoss(fightPlayer.losses, type, previousPlayer.losses[type]);
-          }
-        }
-      } else {
-        fight = null;
-      }
+      const unit = replay.unit(event.sid);
+      const zone = map.zones[unit.y][unit.x];
+      addZone(players[event.pid].zones, zone);
     }
-
-    previous = part;
   }
 
-  return [...highlights, ...timeline].sort((a, b) => (a.loop - b.loop));
+  for (const pid in players) {
+    const army = players[pid].army;
+
+    players[pid].value = getArmyValue(army, army);
+    players[pid].loss = getArmyValue(players[pid].died, army);
+  }
+
+  for (const unit of replay.units.values()) {
+    if (IS_BASE[unit.type] && (unit.exit > fight.loop) && (unit.enter <= fight.end)) {
+      const zone = map.zones[unit.y][unit.x];
+      addZone(players[unit.owner].bases, zone);
+    }
+  }
+
+  fight.players = players;
+
+  for (const pid in players) {
+    players[pid].rating = {
+      ...calculateMilitaryRating(fight, pid),
+    };
+  }
+
+  fight.value = players[1].value + players[2].value;
+  fight.loss = players[1].loss + players[2].loss;
+  delete fight.events;
+
+  return fight;
 }
 
-export default function timeline(replay) {
-  return addHighlights(replay, createTimeline(replay, splitInChunks(replay.events)));
+function addUnit(collection, type, count) {
+  if (collection[type]) {
+    collection[type] += count;
+  } else {
+    collection[type] = count;
+  }
+}
+
+function addZone(list, zone) {
+  if (list.indexOf(zone) < 0) {
+    list.push(zone);
+  }
 }

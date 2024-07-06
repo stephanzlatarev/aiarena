@@ -5,6 +5,22 @@ import Replay from "./replay/replay.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
 
+import Equilibrium513AIE from "./map/Equilibrium513AIE.js";
+import GoldenAura513AIE from "./map/GoldenAura513AIE.js";
+import Gresvan513AIE from "./map/Gresvan513AIE.js";
+import HardLead513AIE from "./map/HardLead513AIE.js";
+import Oceanborn513AIE from "./map/Oceanborn513AIE.js";
+import SiteDelta513AIE from "./map/SiteDelta513AIE.js";
+
+const MAP_ZONES = {
+  Equilibrium513AIE: Equilibrium513AIE,
+  GoldenAura513AIE: GoldenAura513AIE,
+  Gresvan513AIE: Gresvan513AIE,
+  HardLead513AIE: HardLead513AIE,
+  Oceanborn513AIE: Oceanborn513AIE,
+  SiteDelta513AIE: SiteDelta513AIE,
+};
+
 const VERSION = 3;
 const COMPETITION = 27;
 
@@ -162,16 +178,17 @@ async function processRounds(competition) {
 
       console.log("Match:", match.id);
 
+      const map = maps.get(match.map);
       let warnings;
       let timeline;
       let overview;
 
-      if (match.replay) {
+      if (match.replay && map) {
         try {
           const replay = await Replay.load(match.replay);
   
           warnings = [...replay.warnings];
-          timeline = getTimeline(replay);
+          timeline = getTimeline(replay, MAP_ZONES[map]);
           overview = getOverview(replay, timeline);
         } catch (error) {
           console.log(error.message);
@@ -188,9 +205,10 @@ async function processRounds(competition) {
         round: round.number,
         match: match.id,
         time: match.time,
-        map: maps.get(match.map),
+        map: map,
         player1: match.player1,
         player2: match.player2,
+        duration: match.duration,
         winner: match.winner,
         replay: match.replay,
         warnings: warnings,

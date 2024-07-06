@@ -1,76 +1,103 @@
 
-const ArmyRank = {
-  // Protoss army
-  Probe: 0,
-  Carrier: 1,
-  VoidRay: 2,
-  Colossus: 3,
-  Archon: 4,
-  Stalker: 5,
-  Immortal: 6,
-  Adept: 7,
-  Zealot: 8,
-  Sentry: 9,
-  Phoenix: 10,
-  Tempest: 11,
-  HighTemplar: 12,
-  DarkTemplar: 13,
-  Oracle: 14,
-  Disruptor: 15,
-  Mothership: 16,
-  WarpPrism: 17,
-  Observer: 18,
+const ProtossArmyUnitValue = {
+  // Probe is first with rank 0 so that it is included in army only when there are no other units
+  Probe: 50,
 
-  // Terran army
-  SCV: 0,
-  Battlecruiser: 1,
-  Liberator: 2,
-  Raven: 3,
-  VikingFighter: 4,
-  Banshee: 5,
-  Thor: 6,
-  SiegeTank: 7,
-  VikingAssault: 8,
-  Ghost: 9,
-  Cyclone: 10,
-  WidowMine: 11,
-  Reaper: 12,
-  Marauder: 13,
-  Hellbat: 14,
-  Hellion: 15,
-  Marine: 16,
-  Medivac: 17,
-
-  // Zerg army
-  Drone: 0,
-  BroodLord: 1,
-  Viper: 2,
-  Corruptor: 3,
-  Mutalisk: 4,
-  Ultralisk: 5,
-  Hydralisk: 6,
-  Infestor: 7,
-  Lurker: 8,
-  SwarmHost: 9,
-  Ravager: 10,
-  Baneling: 11,
-  Roach: 12,
-  Zergling: 13,
-  Queen: 14,
-  Changeling: 15,
-  Overseer: 16,
+  // All other units are ordered by their rank
+  Carrier: 600,
+  VoidRay: 400,
+  Colossus: 500,
+  Archon: 450,
+  Stalker: 175,
+  Immortal: 375,
+  Adept: 125,
+  Zealot: 100,
+  Sentry: 150,
+  Phoenix: 250,
+  Tempest: 425,
+  HighTemplar: 200,
+  DarkTemplar: 250,
+  Oracle: 300,
+  Disruptor: 300,
+  Mothership: 600,
+  WarpPrism: 250,
+  Observer: 100,
+  PhotonCannon: 150,
+  ShieldBattery: 100,
 };
 
-export function getArmyCount(replay, loop, pid) {
+const TerranArmyUnitValue = {
+  // SCV is first with rank 0 so that it is included in army only when there are no other units
+  SCV: 50,
+
+  // All other units are ordered by their rank
+  Battlecruiser: 700,
+  Liberator: 275,
+  Raven: 250,
+  VikingFighter: 225,
+  Banshee: 250,
+  Thor: 500,
+  SiegeTank: 275,
+  VikingAssault: 225,
+  Ghost: 275,
+  Cyclone: 175,
+  WidowMine: 100,
+  Reaper: 100,
+  Marauder: 125,
+  Hellbat: 100,
+  Hellion: 100,
+  Marine: 50,
+  Medivac: 200,
+  PlanetaryFortress: 700,
+  Bunker: 100,
+  MissileTurret: 100,
+  SensorTower: 225,
+};
+
+const ZergArmyUnitValue = {
+  // Drone is first with rank 0 so that it is included in army only when there are no other units
+  Drone: 50,
+
+  // All other units are ordered by their rank
+  BroodLord: 550,
+  Viper: 300,
+  Corruptor: 250,
+  Mutalisk: 200,
+  Ultralisk: 475,
+  Hydralisk: 150,
+  Infestor: 250,
+  Lurker: 300,
+  SwarmHost: 175,
+  Ravager: 200,
+  Baneling: 75,
+  Roach: 100,
+  Zergling: 25,
+  Queen: 150,
+  Overseer: 200,
+  NydusWorm: 150,
+  SporeCrawler: 75,
+  SpineCrawler: 100,
+};
+
+const UnitValue = { ...ProtossArmyUnitValue, ...TerranArmyUnitValue, ...ZergArmyUnitValue };
+const ArmyRank = { ...rank(ProtossArmyUnitValue), ...rank(TerranArmyUnitValue), ...rank(ZergArmyUnitValue) };
+
+export function getArmyBuild(army) {
+  return Object.keys(army).sort((a, b) => (ArmyRank[a] - ArmyRank[b]));
+}
+
+export function getArmyCount(replay, start, end, pid) {
   const army = {};
   let ranked = 0;
 
   for (const unit of replay.units.values()) {
-    const rank = ArmyRank[unit.type];
+    let type = unit.type;
+    if (type.endsWith("Burrowed")) type = type.substring(0, type.length - 8);
+    if (type === "SiegeTankSieged") type = "SiegeTank";
 
-    if ((unit.owner == pid) && (unit.enter <= loop) && (unit.exit > loop) && (rank >= 0)) {
-      const type = unit.type;
-  
+    const rank = ArmyRank[type];
+
+    if ((unit.owner == pid) && (unit.exit > start) && (unit.enter <= end) && (rank >= 0)) {
       if (army[type]) {
         army[type]++;
       } else {
@@ -93,6 +120,25 @@ export function getArmyCount(replay, loop, pid) {
   return army;
 }
 
-export function getArmyBuild(army) {
-  return Object.keys(army).sort((a, b) => (ArmyRank[a] - ArmyRank[b]));
+export function getArmyValue(list, army) {
+  let value = 0;
+
+  for (let type in list) {
+    if (army[type]) {
+      value += UnitValue[type] * list[type];
+    }
+  }
+
+  return value;
+}
+
+function rank(list) {
+  const result = {};
+  let rank = 0;
+
+  for (let type in list) {
+    result[type] = rank++;
+  }
+
+  return result;
 }

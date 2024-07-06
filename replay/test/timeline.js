@@ -1,3 +1,4 @@
+import SiteDelta from "../src/map/SiteDelta513AIE.js";
 import Replay from "../src/replay/replay.js";
 import timeline from "../src/timeline/timeline.js";
 import overview from "../src/timeline/overview.js";
@@ -32,7 +33,10 @@ function five(value) {
 
 function show(point) {
   if (point.type === "fight") {
-    console.log(JSON.stringify(point, null, 2));
+    console.log(
+        clock(point.loop), "\t",
+        JSON.stringify(point, null, 2)
+    );
   } else {
     let food = { '1': 0, '2': 0 };
     let workers = { '1': 0, '2': 0 };
@@ -52,7 +56,7 @@ function show(point) {
         losses += player.losses[loss];
       }
     }
-  
+
     const dots = [];
     for (let i = 0; i < losses; i++) dots.push("@");
     console.log(
@@ -69,7 +73,7 @@ function show(point) {
 async function go() {
   try {
     const replay = await Replay.load(file);
-    const points = timeline(replay);
+    const points = timeline(replay, SiteDelta);
 
     for (const point of points) {
       show(point);

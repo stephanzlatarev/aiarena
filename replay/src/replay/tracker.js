@@ -65,8 +65,8 @@ async function readUnitBornEvent(events, replay, loop, data) {
   const owner = data["3"];
   const type = data["2"].toString("utf8");
   const unitTag = data["0"] << 18 | data["1"];
-  const x = data["5"] * 4;
-  const y = data["6"] * 4;
+  const x = data["5"];
+  const y = data["6"];
 
   if (type.startsWith("Beacon")) return;
 
@@ -79,8 +79,8 @@ async function readUnitBornEvent(events, replay, loop, data) {
 
 async function readUnitDiedEvent(events, replay, loop, data) {
   const unitTag = data["0"] << 18 | data["1"];
-  const x = data["3"] * 4;
-  const y = data["4"] * 4;
+  const x = data["3"];
+  const y = data["4"];
   const unit = replay.unit(unitTag);
 
   if (unit && ((unit.owner === 1) || (unit.owner === 2))) {
