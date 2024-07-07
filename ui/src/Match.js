@@ -4,6 +4,7 @@ import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
@@ -139,7 +140,11 @@ function History({ bot, match }) {
     for (let c = 0; c < 50; c++, round++) {
       if (rounds.has(round)) count++;
 
-      cells.push(<MatchCell key={ key++ } bot={ bot } match={ rounds.get(round) } text={ round } />);
+      cells.push(
+        <TableCell key={ key++ }>
+          <MatchCell  bot={ bot } match={ rounds.get(round) } text={ round } />
+        </TableCell>
+      );
     }
 
     rows.push(<TableRow key={ key++ }>{ cells }</TableRow>);

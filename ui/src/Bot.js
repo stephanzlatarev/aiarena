@@ -25,12 +25,16 @@ export default function Bot() {
     <Paper elevation={ 3 }>
       <Tabs value={ tab } onChange={ (_, value) => setTab(value) }>
         <Tab label="Rounds" value="1" />
-        <Tab label="Worst matches" value="2" />
+        <Tab label="Sparring" value="2" />
+        <Tab label="Worst matches" value="3" />
       </Tabs>
       <TabPanel tab={ tab } index="1">
         <Rounds bot={ bot } matches={ matches } />
       </TabPanel>
       <TabPanel tab={ tab } index="2">
+        <Sparring bot={ bot } matches={ matches } />
+      </TabPanel>
+      <TabPanel tab={ tab } index="3">
         <MatchList bot={ bot } matches={ matches } />
       </TabPanel>
     </Paper>
@@ -66,7 +70,11 @@ function Rounds({ bot, matches }) {
     }
 
     rounds = Math.max(match.round, rounds);
-    list[match.round] = (<MatchCell key={ key++ } bot={ bot } match={ match } style={ style } />);
+    list[match.round] = (
+      <TableCell key={ key++ } style={ style }>
+        <MatchCell bot={ bot } match={ match } />
+      </TableCell>
+    );
   }
 
   const opponentNames = [...opponents.keys()].sort();
@@ -116,6 +124,152 @@ function Rounds({ bot, matches }) {
       </Table>
     </TableContainer>
   );
+}
+
+const MAP_NAMES = ["Equilibrium513AIE", "GoldenAura513AIE", "Gresvan513AIE", "HardLead513AIE", "Oceanborn513AIE", "SiteDelta513AIE"];
+const MAP_DESCRIPTION = {
+  Equilibrium513AIE: "Find inner balance on this map with expansions in close proximity.",
+  GoldenAura513AIE: "Goldenaura is a macro map that features total of 13 blue bases and one golden base...",
+  Gresvan513AIE: "A wide macro map designed around control of the center high and low grounds...",
+  HardLead513AIE: "Short rush distance and multiple paths will force players to split their armies or...",
+  Oceanborn513AIE: "Oceanborn is a standard map set in an underwater world.",
+  SiteDelta513AIE: "Site Delta is a macro map designed with a tight choke in the center...",
+};
+
+function Sparring({ bot, matches }) {
+  const cellStyle = { textAlign: "center", whiteSpace: "nowrap" };
+
+  let key = 1;
+  let opponents = new Map();
+
+  for (const match of matches) {
+    const opponent = (match.player1 === bot) ? match.player2 : match.player1;
+    let info = opponents.get(opponent);
+
+    if (!info) {
+      info = { opponent: opponent, wins: 0, matches: [] };
+      opponents.set(opponent, info);
+    }
+
+    if (match.winner === bot) {
+      info.wins++;
+    } else if (!match.winner) {
+      info.wins += 0.5;
+    }
+
+    info.matches.push(match);
+  }
+
+  let list = [...opponents.values()];
+  for (const info of list) {
+    info.winRate = info.wins / info.matches.length;
+    info.score = Math.abs(0.5 - info.winRate);
+  }
+  list.sort((a, b) => (a.score - b.score));
+  if (list.length > 12) list.length = 12;
+
+  const rows = list.map(info => (
+    <TableRow key={ key++ }>
+      <TableCell style={{ whiteSpace: "nowrap", fontWeight: "bold" }}>{ info.opponent }</TableCell>
+      <TableCell>{ (info.winRate * 100).toFixed(2) + "%" }</TableCell>
+      <TableCell><Army army={ getLastArmyBuild(info.matches) } /></TableCell>
+      {
+        MAP_NAMES.map(map => (
+          <TableCell key={ key++ } style={{ textAlign: "right" }}>
+            { listSparringMatches(bot, map, info.matches) }
+          </TableCell>
+        ))
+      }
+    </TableRow>
+  ));
+
+  return (
+    <TableContainer component={ Paper }>
+      <p>&nbsp; &nbsp; Top 12 opponents for sparring with the last 10 matches per map.</p>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell style={ cellStyle }>Opponent</TableCell>
+            <TableCell style={ cellStyle }>Wins</TableCell>
+            <TableCell style={ cellStyle }>Army</TableCell>
+            { MAP_NAMES.map(name => (<TableCell key={ key++ } style={ cellStyle }>{ name }</TableCell>)) }
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
+            {
+              MAP_NAMES.map(name => (
+                <TableCell key={ key++ } style={ cellStyle }>
+                  <img src={ "/map/" + name + ".jpg" } style={{ height: "100px" }} />
+                </TableCell>
+              ))
+            }
+          </TableRow>
+          <TableRow>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
+            {
+              MAP_NAMES.map(name => (
+                <TableCell key={ key++ } style={{ ...cellStyle, whiteSpace: "normal" }}>
+                  { MAP_DESCRIPTION[name] }
+                </TableCell>
+              ))
+            }
+          </TableRow>
+          { rows }
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+function listSparringMatches(bot, map, matches) {
+  const list = [];
+  let key = 1;
+
+  for (const match of matches) {
+    if (match.map === map) {
+      list.push(match);
+    }
+  }
+  list.sort((a, b) => (b.round - a.round));
+  if (list.length > 10) list.length = 10;
+  list.reverse();
+
+  return list.map(match => (
+    <MatchCell key={ key++ } bot={ bot } match={ match } style={{ padding: "5px" }} />
+  ));
+}
+
+function getLastArmyBuild(matches) {
+  let last = null;
+
+  for (const match of matches) {
+    if (!last) {
+      last = match;
+    } else {
+      const isMatchLost = (match.opponent === match.winner);
+      const isLastLost = (last.opponent === last.winner);
+
+      if (isMatchLost) {
+        if (isLastLost) {
+          if (match.round > last.round) {
+            last = match;
+          }
+        } else {
+          last = match;
+        }
+      } else if (!isLastLost && (match.round > last.round)) {
+        last = match;
+      }
+    }
+  }
+
+  return last ? last.overview.opponent.armyBuild : [];
 }
 
 function MatchList({ bot, matches }) {

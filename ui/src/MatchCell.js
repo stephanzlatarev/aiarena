@@ -1,13 +1,10 @@
 import { Link } from "react-router-dom";
-import TableCell from "@mui/material/TableCell";
 
 const COLOR_GRAY = "gray";
 const COLOR_GREEN = "#00AA00";
 const COLOR_RED = "#AA0000";
 
-export default function MatchCell({ bot, match, text, style }) {
-  const cellStyle = style ? { ...style, textAlign: "center" } : { textAlign: "center" };
-
+export default function MatchCell({ bot, match, text }) {
   let status = COLOR_GRAY;
 
   if (match) {
@@ -21,8 +18,7 @@ export default function MatchCell({ bot, match, text, style }) {
 
   if (match) {
     const path = "/bot/" + bot + "/match/" + match.match;
-    const decoration = (match.warnings && match.warnings.length) ? "line-through" : "none";
-    const linkStyle = { color: status, textDecoration: decoration, textDecorationColor: "white", textDecorationStyle: "wavy", textDecorationThickness: "1.8px" };
+    const linkStyle = { color: status, textDecoration: "none" };
 
     if (text) {
       linkStyle.backgroundColor = status;
@@ -31,22 +27,19 @@ export default function MatchCell({ bot, match, text, style }) {
       linkStyle.borderRadius = "3px";
 
       return (
-        <TableCell style={ cellStyle }>
-          <Link to={ path } style={ linkStyle }>{ text }</Link>
-        </TableCell>
+        <Link to={ path } style={ linkStyle }>{ text }</Link>
       );
     } else {
       linkStyle.color = status;
+      linkStyle.padding = "0px 3px";
 
       return (
-        <TableCell style={ cellStyle }>
-          <Link to={ path } style={ linkStyle }>&#11044;</Link>
-        </TableCell>
+        <Link to={ path } style={ linkStyle }>&#11044;</Link>
       );
     }
   }
 
   return (
-    <TableCell style={ cellStyle }>{ text ? text : "-" }</TableCell>
+    <span>{ text ? text : "-" }</span>
   );
 }
