@@ -245,27 +245,31 @@ async function processRankings(competition) {
   }
 }
 
-function addToOverview(overviews, player, key, value) {
-  if ((value >= 0) || Array.isArray(value)) {
-    let overview = overviews.get(player);
+function findOverview(overviews, player, key, empty) {
+  let overview = overviews.get(player);
 
-    if (!overview) {
-      overview = {};
-      overviews.set(player, overview);
-    }
+  if (!overview) {
+    overview = {};
+    overviews.set(player, overview);
+  }
 
-    let list = overview[key];
+  let collection = overview[key];
 
-    if (!list) {
-      list = [];
-      overview[key] = list;
-    }
+  if (!collection) {
+    collection = empty;
+    overview[key] = collection;
+  }
 
-    list.push(Array.isArray(value) ? value.join("|") : value);
+  return collection;
+}
+
+function addRatingOverview(overviews, player, key, value) {
+  if (value >= 0) {
+    findOverview(overviews, player, key, []).push(value);
   }
 }
 
-function findAverage(list) {
+function findAverageRating(list) {
   if (!list) return 0;
 
   let sum = 0;
@@ -277,61 +281,95 @@ function findAverage(list) {
   return sum / list.length;
 }
 
-function findMostFrequent(list) {
-  if (!list || !list.length) return [];
+function addArmyBuildOverview(overviews, player, key, build, win, score) {
+  if (Array.isArray(build)) {
+    const builds = findOverview(overviews, player, key, {});
+    const buildKey = build.join("|");
+    const buildInfo = builds[buildKey];
 
-  const counts = new Map();
-  const order = [];
-
-  for (const one of list) {
-    let count = counts.get(one);
-
-    if (count) {
-      counts.set(one, count + 1);
+    if (buildInfo) {
+      if (win) {
+        buildInfo.score += score;
+        buildInfo.wins++;
+      } else {
+        buildInfo.score -= score;
+      }
     } else {
-      counts.set(one, 1);
+      builds[buildKey] = {
+        army: build,
+        score: win ? score : -score,
+        wins: win ? 1 : 0,
+      }
+    }
+  }
+}
+
+function findBestArmyBuild(builds) {
+  let best = { army: [], score: -Infinity, wins: 0 };
+
+  if (builds) {
+    for (const key in builds) {
+      const build = builds[key];
+
+      if (!best) {
+        // Any army build is better than no army build
+        best = build;
+      } else if (best.wins > 0) {
+        // An army build is better than another army build with wins only if it has wins too
+        if (build.wins > 0) {
+          const isScoreHigher = build.score > best.score;
+          const hasSignificantlyMoreWins = (build.wins > best.wins * 2);
+          const hasSignificantlyLessWins = (best.wins > build.wins * 2);
+
+          if (hasSignificantlyMoreWins) {
+            // An army build with wins is better than another army build with wins if it has significantly more wins
+            best = build;
+          } else if (isScoreHigher && !hasSignificantlyLessWins) {
+            // An army build with wins is better than another army build with wins if its score is higher but the other doesn't have significantly more wins
+            best = build;
+          }
+        }
+      } else if (build.wins > 0) {
+        // An army build with wins is better than another army build without wins
+        best = build;
+      } else if (build.score > best.score) {
+        // An army build without wins is better than another army build without wins if its score is higher
+        best = build;
+      }
     }
   }
 
-  for (const [key, count] of counts) {
-    order.push({ key, count });
-  }
-  order.sort((a, b) => (b.count - a.count));
-
-  return order[0].key.split("|");
+  return best;
 }
 
 async function processOverviews() {
   const overviews = new Map();
-  const keys = [
-    "armyBuild",
+  const ratings = [
     "militaryCapacity", "militaryPerformance",
     "economyCapacity", "economyPerformance",
     "technologyCapacity", "technologyPerformance"
   ];
 
-  await traverseMatches({ player1: 1, player2: 1, overview: 1, winner: 1 }, function(match) {
+  await traverseMatches({ round: 1, player1: 1, player2: 1, winner: 1, overview: 1 }, function(match) {
     if (match.overview) {
-      for (const key of keys) {
-        if ((key !== "armyBuild") || (match.winner === match.player1)) {
-          addToOverview(overviews, match.player1, key, match.overview.players[1][key]);
-        }
-
-        if ((key !== "armyBuild") || (match.winner === match.player2)) {
-          addToOverview(overviews, match.player2, key, match.overview.players[2][key]);
-        }
+      for (const rating of ratings) {
+        addRatingOverview(overviews, match.player1, rating, match.overview.players[1][rating]);
+        addRatingOverview(overviews, match.player2, rating, match.overview.players[2][rating]);
       }
+
+      addArmyBuildOverview(overviews, match.player1, "armyBuild", match.overview.players[1].armyBuild, (match.winner === match.player1), match.round);
+      addArmyBuildOverview(overviews, match.player2, "armyBuild", match.overview.players[2].armyBuild, (match.winner === match.player2), match.round);
     }
   });
 
   for (const [player, overview] of overviews) {
-    for (const key of keys) {
-      if (key === "armyBuild") {
-        overview[key] = findMostFrequent(overview[key]);
-      } else {
-        overview[key] = findAverage(overview[key]);
-      }
+    for (const rating of ratings) {
+      overview[rating] = findAverageRating(overview[rating]);
     }
+
+    const bestArmyBuild = findBestArmyBuild(overview.armyBuild);
+    overview.armyBuild = bestArmyBuild.army;
+    overview.armyBuildWins = bestArmyBuild.wins;
 
     await storeRanking({ ...overview, bot: player });
   }

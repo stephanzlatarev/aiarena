@@ -51,7 +51,12 @@ export default function Rankings() {
         </TableCell>
         <TableCell>{ one.winRate.toFixed(2) }%</TableCell>
         <TableCell>{ one.elo }</TableCell>
-        <TableCell><Army army={ one.armyBuild } /></TableCell>
+        <TableCell>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Army army={ one.armyBuild } />
+            <div>({ one.armyBuildWins || 0 } wins)</div>
+          </div>
+        </TableCell>
         <TableCell><Rating capacity={ one.militaryCapacity } performance={ one.militaryPerformance } /></TableCell>
         <TableCell><Rating capacity={ one.economyCapacity } performance={ one.economyPerformance } /></TableCell>
         <TableCell><Rating capacity={ one.technologyCapacity } performance={ one.technologyPerformance } /></TableCell>
@@ -70,7 +75,7 @@ export default function Rankings() {
             <TableCell>Name</TableCell>
             <TableCell>Wins</TableCell>
             <TableCell>ELO</TableCell>
-            <TableCell>Best build</TableCell>
+            <TableCell>Best army composition</TableCell>
             <TableCell>Military score</TableCell>
             <TableCell>Economy score</TableCell>
             <TableCell>Technology score</TableCell>
