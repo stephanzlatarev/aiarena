@@ -4,7 +4,7 @@ const COLOR_GRAY = "gray";
 const COLOR_GREEN = "#00AA00";
 const COLOR_RED = "#AA0000";
 
-export default function MatchCell({ bot, match, text }) {
+export default function MatchCell({ bot, match, text, background }) {
   let status = COLOR_GRAY;
 
   if (match) {
@@ -30,6 +30,7 @@ export default function MatchCell({ bot, match, text }) {
         <Link to={ path } style={ linkStyle }>{ text }</Link>
       );
     } else {
+      linkStyle.backgroundColor = background ? background : "white";
       linkStyle.color = status;
       linkStyle.padding = "0px 3px";
 

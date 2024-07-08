@@ -12,9 +12,10 @@ import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
 import MatchCell from "./MatchCell";
 import Rating from "./Rating";
+import displayTime from "./time";
 
 export default function Bot() {
-  const { bot, matches } = useAsyncValue();
+  const { bot, matches, ranking } = useAsyncValue();
   const [tab, setTab] = React.useState("1");
 
   for (const match of matches) {
@@ -32,7 +33,7 @@ export default function Bot() {
         <Rounds bot={ bot } matches={ matches } />
       </TabPanel>
       <TabPanel tab={ tab } index="2">
-        <Sparring bot={ bot } matches={ matches } />
+        <Sparring bot={ bot } matches={ matches } ranking={ ranking } />
       </TabPanel>
       <TabPanel tab={ tab } index="3">
         <MatchList bot={ bot } matches={ matches } />
@@ -136,11 +137,12 @@ const MAP_DESCRIPTION = {
   SiteDelta513AIE: "Site Delta is a macro map designed with a tight choke in the center...",
 };
 
-function Sparring({ bot, matches }) {
+function Sparring({ bot, matches, ranking }) {
   const cellStyle = { textAlign: "center", whiteSpace: "nowrap" };
 
   let key = 1;
   let opponents = new Map();
+  let hasMatchesWithPreviousVersion = false;
 
   for (const match of matches) {
     const opponent = (match.player1 === bot) ? match.player2 : match.player1;
@@ -168,6 +170,19 @@ function Sparring({ bot, matches }) {
   list.sort((a, b) => (a.score - b.score));
   if (list.length > 12) list.length = 12;
 
+  for (const info of list) {
+    info.matches = splitSparringMatchesByMap(info.matches);
+
+    for (const map in info.matches) {
+      for (const match of info.matches[map]) {
+        if (match.time < ranking.lastUpdate) {
+          match.background = "lightGray";
+          hasMatchesWithPreviousVersion = true;
+        }
+      }
+    }
+  }
+
   const rows = list.map(info => (
     <TableRow key={ key++ }>
       <TableCell style={{ whiteSpace: "nowrap", fontWeight: "bold" }}>{ info.opponent }</TableCell>
@@ -175,8 +190,8 @@ function Sparring({ bot, matches }) {
       <TableCell><Army army={ getLastArmyBuild(info.matches) } /></TableCell>
       {
         MAP_NAMES.map(map => (
-          <TableCell key={ key++ } style={{ textAlign: "right" }}>
-            { listSparringMatches(bot, map, info.matches) }
+          <TableCell key={ key++ }>
+            { info.matches[map].map(match => (<MatchCell key={ key++ } bot={ bot } match={ match } background={ match.background } />)) }
           </TableCell>
         ))
       }
@@ -185,7 +200,10 @@ function Sparring({ bot, matches }) {
 
   return (
     <TableContainer component={ Paper }>
-      <p>&nbsp; &nbsp; Top 12 opponents for sparring with the last 10 matches per map.</p>
+      <p>
+        &nbsp; &nbsp; Top 12 sparring opponents with the last 10 matches per map.
+        { hasMatchesWithPreviousVersion ? " The bot was updated " + displayTime(ranking.lastUpdate) + ". Older matches are grayed." : null }
+      </p>
       <Table>
         <TableHead>
           <TableRow>
@@ -227,44 +245,49 @@ function Sparring({ bot, matches }) {
   );
 }
 
-function listSparringMatches(bot, map, matches) {
-  const list = [];
-  let key = 1;
+function splitSparringMatchesByMap(matches) {
+  const split = {};
+
+  for (const map of MAP_NAMES) {
+    split[map] = [];
+  }
 
   for (const match of matches) {
-    if (match.map === map) {
-      list.push(match);
-    }
+    split[match.map].push(match);
   }
-  list.sort((a, b) => (b.round - a.round));
-  if (list.length > 10) list.length = 10;
-  list.reverse();
 
-  return list.map(match => (
-    <MatchCell key={ key++ } bot={ bot } match={ match } style={{ padding: "5px" }} />
-  ));
+  for (const map in split) {
+    const list = split[map];
+    list.sort((a, b) => (b.round - a.round));
+    if (list.length > 10) list.length = 10;
+    list.reverse();
+  }
+
+  return split;
 }
 
 function getLastArmyBuild(matches) {
   let last = null;
 
-  for (const match of matches) {
-    if (!last) {
-      last = match;
-    } else {
-      const isMatchLost = (match.opponent === match.winner);
-      const isLastLost = (last.opponent === last.winner);
+  for (const map in matches) {
+    for (const match of matches[map]) {
+      if (!last) {
+        last = match;
+      } else {
+        const isMatchLost = (match.opponent === match.winner);
+        const isLastLost = (last.opponent === last.winner);
 
-      if (isMatchLost) {
-        if (isLastLost) {
-          if (match.round > last.round) {
+        if (isMatchLost) {
+          if (isLastLost) {
+            if (match.round > last.round) {
+              last = match;
+            }
+          } else {
             last = match;
           }
-        } else {
+        } else if (!isLastLost && (match.round > last.round)) {
           last = match;
         }
-      } else if (!isLastLost && (match.round > last.round)) {
-        last = match;
       }
     }
   }
@@ -341,24 +364,4 @@ function addScore(bot, match) {
 
 function orderByScore(a, b) {
   return (a.score - b.score);
-}
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const ONE_HOUR = 2 * 60 * 60 * 1000;
-const TWO_HOURS = 2 * ONE_HOUR;
-const ONE_DAY = 24 * ONE_HOUR;
-const TWO_DAYS = 2 * ONE_DAY;
-const ONE_MONTH = 30 * ONE_DAY;
-
-function displayTime(time) {
-  if (!time) return "";
-
-  const date = new Date(time);
-  const diff = Date.now() - date.getTime();
-
-  if (diff < TWO_HOURS) return "just now";
-  if (diff < TWO_DAYS) return Math.floor(diff / ONE_HOUR) + " hours ago";
-  if (diff < ONE_MONTH) return Math.floor(diff / ONE_DAY) + " days ago";
-
-  return MONTHS[date.getMonth()] + " " + date.getDate();
 }
