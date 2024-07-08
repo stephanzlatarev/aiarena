@@ -32,11 +32,13 @@ function Frame() {
 
 function Loader(props) {
   const data = useLoaderData();
+  const bot = data.bot;
+  const tab = data.tab;
 
   return (
     <React.Suspense fallback={ <div>Loading info...</div> } >
       <Await resolve={ data.info } errorElement={ <div>Error loading info!</div> }>
-        { React.cloneElement(props.children, data) }
+        { React.cloneElement(props.children, { bot, tab }) }
       </Await>
     </React.Suspense>
   );
@@ -47,9 +49,8 @@ const router = createBrowserRouter(createRoutesFromElements(
     <Route index element={ <Loader><Rankings /></Loader> } loader={ () => defer({ info: Api.get("rankings") }) } />
 
     <Route path="bot/:bot">
-      <Route index element={ <Loader><Bot /></Loader> } loader={ ({ params }) => defer({ info: Api.get("bot/" + params.bot) }) } />
+      <Route path=":tab?" element={ <Loader><Bot /></Loader> } loader={ ({ params }) => defer({ bot: params.bot, tab: params.tab, info: Api.get("bot/" + params.bot) }) } />
       <Route path="match/:match" element={ <Loader><Match /></Loader> } loader={ ({ params }) => defer({ bot: params.bot, info: Api.get("match/" + params.match) }) } />
-      <Route path="*" element={ <div>How did you get here?</div> } />
     </Route>
 
     <Route path="*" element={ <div>How did you get here?</div> } />

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useAsyncValue } from "react-router-dom";
+import { Link, useAsyncValue, useNavigate } from "react-router-dom";
 import Paper from "@mui/material/Paper";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
@@ -14,9 +14,11 @@ import MatchCell from "./MatchCell";
 import Rating from "./Rating";
 import displayTime from "./time";
 
-export default function Bot() {
+export default function Bot({ tab }) {
+  tab = tab ? tab : "rounds";
+
   const { bot, matches, ranking } = useAsyncValue();
-  const [tab, setTab] = React.useState("1");
+  const navigate = useNavigate();
 
   for (const match of matches) {
     addScore(bot, match);
@@ -24,18 +26,18 @@ export default function Bot() {
 
   return (
     <Paper elevation={ 3 }>
-      <Tabs value={ tab } onChange={ (_, value) => setTab(value) }>
-        <Tab label="Rounds" value="1" />
-        <Tab label="Sparring" value="2" />
-        <Tab label="Worst matches" value="3" />
+      <Tabs value={ tab } onChange={ (_, tab) => navigate("/bot/" + bot + "/" + tab) }>
+        <Tab label="Rounds" value="rounds" />
+        <Tab label="Sparring" value="sparring" />
+        <Tab label="Worst matches" value="worst" />
       </Tabs>
-      <TabPanel tab={ tab } index="1">
+      <TabPanel tab={ tab } index="rounds">
         <Rounds bot={ bot } matches={ matches } />
       </TabPanel>
-      <TabPanel tab={ tab } index="2">
+      <TabPanel tab={ tab } index="sparring">
         <Sparring bot={ bot } matches={ matches } ranking={ ranking } />
       </TabPanel>
-      <TabPanel tab={ tab } index="3">
+      <TabPanel tab={ tab } index="worst">
         <MatchList bot={ bot } matches={ matches } />
       </TabPanel>
     </Paper>
@@ -46,7 +48,7 @@ function TabPanel({ children, tab, index }) {
   if (tab === index) {
     return (
       <div role="tabpanel">
-        {children}
+        { children }
       </div>
     );
   }
