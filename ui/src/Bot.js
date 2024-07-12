@@ -65,22 +65,32 @@ function Rounds({ bot, matches }) {
   let key = 1;
 
   for (const match of matches) {
-    let list = opponents.get(match.opponent);
+    let info = opponents.get(match.opponent);
 
-    if (!list) {
-      list = [];
-      opponents.set(match.opponent, list);
+    if (!info) {
+      info = { opponent: match.opponent, cells: [], count: 0, results: [], wins: 0 };
+      opponents.set(match.opponent, info);
     }
 
     rounds = Math.max(match.round, rounds);
-    list[match.round] = (
+
+    info.count++;
+
+    if (match.winner === bot) {
+      info.wins++;
+      info.results[match.round] = 1;
+    } else {
+      info.results[match.round] = -1;
+    }
+
+    info.cells[match.round] = (
       <TableCell key={ key++ } style={ style }>
         <MatchCell bot={ bot } match={ match } />
       </TableCell>
     );
   }
 
-  const opponentNames = [...opponents.keys()].sort();
+  const opponentNames = getOrderedOpponentsNames(opponents, rounds);
 
   for (const opponent of opponentNames) {
     cols.push(<TableCell key={ key++ } style={{ ...style, writingMode: "vertical-lr", textOrientation: "sideways", textAlign: "right", paddingBottom: "0.5rem" }}>{ opponent }</TableCell>);
@@ -92,10 +102,10 @@ function Rounds({ bot, matches }) {
     let hasOpponentsInThisRound = false;
 
     for (const opponent of opponentNames) {
-      const list = opponents.get(opponent);
+      const info = opponents.get(opponent);
 
-      if (list && list[round]) {
-        opponentCols.push(list[round]);
+      if (info && info.cells[round]) {
+        opponentCols.push(info.cells[round]);
         hasOpponentsInThisRound = true;
       } else {
         opponentCols.push(<TableCell key={ key++ }></TableCell>);
@@ -127,6 +137,43 @@ function Rounds({ bot, matches }) {
       </Table>
     </TableContainer>
   );
+}
+
+function getOrderedOpponentsNames(opponents, rounds) {
+  const list = [...opponents.values()];
+
+  for (const info of list) {
+    info.lastMatches = 0;
+    info.lastWins = 0;
+
+    for (let r = rounds - 10; r <= rounds; r++) {
+      const result = info.results[r];
+      if (result) info.lastMatches++;
+      if (result > 0) info.lastWins++;
+    }
+
+    info.isInSameDivision = (info.lastMatches >= 8);
+  }
+
+  list.sort(function (a, b) {
+    if (a.isInSameDivision && b.isInSameDivision) {
+      if (a.lastWins !== b.lastWins) {
+        return (b.lastWins - a.lastWins);
+      } else {
+        return (b.wins * a.count - a.wins * b.count);
+      }
+    } else if (a.isInSameDivision) {
+      return -1;
+    } else if (b.isInSameDivision) {
+      return 1;
+    } else if (a.count === b.count) {
+      return (b.wins * a.count - a.wins * b.count);
+    } else {
+      return (b.count - a.count);
+    }
+  });
+
+  return list.map(info => info.opponent);
 }
 
 const MAP_NAMES = ["Equilibrium513AIE", "GoldenAura513AIE", "Gresvan513AIE", "HardLead513AIE", "Oceanborn513AIE", "SiteDelta513AIE"];
