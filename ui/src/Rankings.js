@@ -52,7 +52,7 @@ export default function Rankings() {
         <TableCell>{ one.winRate.toFixed(2) }%</TableCell>
         <TableCell>{ one.elo }</TableCell>
         <TableCell>
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", minWidth: "320px" }}>
             <Army army={ one.armyBuild } />
             <div>({ one.armyBuildWins || 0 } wins)</div>
           </div>
