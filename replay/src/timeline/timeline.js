@@ -5,6 +5,11 @@ import Event from "../replay/event.js";
 const STATS_LOOPS = 160;
 const FIGHT_LOOPS = 60 * 22.4;
 const IS_BASE = { CommandCenter: true, Hatchery: true, Hive: true, Lair: true, Nexus: true, OrbitalCommand: true, PlanetaryFortress: true };
+const IS_TEMPORARY = {
+  AdeptPhaseShift: true, Egg: true, InvisibleTargetDummy: true, KD8Charge: true,
+  LocustMP: true, LocustMPPrecursor: true, LurkerMPEgg: true,
+  MULE: true, WarpPrismPhasing: true
+};
 
 export default function timeline(replay, map) {
   const timeline = [];
@@ -65,6 +70,9 @@ function processFight(replay, map, fight) {
     if (event.type === Event.Enter) {
       addUnit(players[event.pid].born, event.stype, 1);
     } else if (event.type === Event.Exit) {
+      if (IS_TEMPORARY[event.stype]) continue;
+      if (event.stype.indexOf("Egg") >= 0) continue;
+
       addUnit(players[event.pid].died, event.stype, 1);
 
       const unit = replay.unit(event.sid);

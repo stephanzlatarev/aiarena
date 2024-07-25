@@ -93,7 +93,9 @@ export function getArmyCount(replay, start, end, pid) {
   for (const unit of replay.units.values()) {
     let type = unit.type;
     if (type.endsWith("Burrowed")) type = type.substring(0, type.length - 8);
+    if (type.endsWith("MP")) type = type.substring(0, type.length - 2);
     if (type === "SiegeTankSieged") type = "SiegeTank";
+    if (type === "SupplyDepotLowered") type = "SupplyDepot";
 
     const rank = ArmyRank[type];
 

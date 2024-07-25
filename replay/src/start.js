@@ -59,6 +59,11 @@ function call(method, path, data) {
         try {
           resolve(JSON.parse(body));
         } catch (error) {
+          if (TRACE) {
+            console.log("<<", response.headers);
+            console.log(error);
+          }
+
           resolve(undefined);
         }
       });
