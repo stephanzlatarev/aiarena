@@ -47,8 +47,8 @@ export default function Match({ bot }) {
   React.useEffect(() => setWidth(ref.current ? ref.current.offsetWidth : 0), [ref.current]);
 
   if (match.overview) {
-    infos.push(<BotInfo key="player1-info" info={ { ...match.player1.ranking, ...match.overview.players[1] } } winner={ match.winner } reverse={ !playerMap.reverse } />);
-    infos.push(<BotInfo key="player2-info" info={ { ...match.player2.ranking, ...match.overview.players[2] } } winner={ match.winner } reverse={ playerMap.reverse } />);
+    infos.push(<BotInfo key="player1-info" info={ { ...match.player1.ranking, ...match.overview.players[1] } } winner={ match.winner } />);
+    infos.push(<BotInfo key="player2-info" info={ { ...match.player2.ranking, ...match.overview.players[2] } } winner={ match.winner } />);
     if (playerMap.reverse) infos.reverse();
   }
 
@@ -69,7 +69,7 @@ export default function Match({ bot }) {
         { match.warnings.join(" ") } &nbsp;
       </div>
 
-      <div width="100%">
+      <div width="100%" style={{ display: "flex", flexDirection: "row" }}>
         { infos }
       </div>
 
@@ -81,8 +81,7 @@ export default function Match({ bot }) {
   );
 }
 
-function BotInfo({ info, winner, reverse }) {
-  const infos = [];
+function BotInfo({ info, winner }) {
   let resultColor;
   let resultText;
 
@@ -96,29 +95,15 @@ function BotInfo({ info, winner, reverse }) {
     resultText = "LOSS";
     resultColor = "#AA0000";
   }
-  infos.push(
-    <div key="1" style={{ display: "inline-block", verticalAlign: "top", width: "50%", padding: "1rem" }}>
-      <div style={{ textAlign: "center" }}><img src={ "/" + info.race + ".png" } width="17" style={{ position: "relative", top: "2px", marginRight: "5px" }} /> { info.bot }</div>
-      <div style={{ color: resultColor, fontSize: "1.5rem", fontWeight: "bold", textAlign: "center" }}>{ resultText }</div>
-      Military: <Rating capacity={ info.militaryCapacity } performance={ info.militaryPerformance } /> <br />
-      Economy: <Rating capacity={ info.economyCapacity } performance={ info.economyPerformance } /> <br />
-      Technology: <Rating capacity={ info.technologyCapacity } performance={ info.technologyPerformance } />
-      <Army army={ info.armyBuild } />
-    </div>
-  );
-
-  infos.push(
-    <div key="2" style={{ display: "inline-block", verticalAlign: "top", width: "50%", padding: "1rem" }}>
-      Elo: { info.elo } <br />
-      Last update: { new Date(info.lastUpdate).toLocaleString() } <br />
-    </div>
-  );
-
-  if (reverse) infos.reverse();
 
   return (
-    <div style={{ display: "inline-block", verticalAlign: "top", width: "50%", padding: "1rem" }}>
-      { infos }
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", verticalAlign: "top", width: "50%", padding: "1rem" }}>
+      <div><img src={ "/" + info.race + ".png" } width="17" style={{ position: "relative", top: "2px", marginRight: "5px" }} /> { info.bot }</div>
+      <div style={{ color: resultColor, fontSize: "1.5rem", fontWeight: "bold" }}>{ resultText }</div>
+      <div>Military: <Rating capacity={ info.militaryCapacity } performance={ info.militaryPerformance } /></div>
+      <div>Economy: <Rating capacity={ info.economyCapacity } performance={ info.economyPerformance } /></div>
+      <div>Technology: <Rating capacity={ info.technologyCapacity } performance={ info.technologyPerformance } /></div>
+      <Army army={ info.armyBuild } />
     </div>
   );
 }
@@ -126,6 +111,7 @@ function BotInfo({ info, winner, reverse }) {
 function History({ bot, match }) {
   const rounds = new Map();
   const rows = [];
+  const cellsPerRow = Math.floor(window.innerWidth / 38);
   let round = 1;
   let count = 0;
   let key = 1;
@@ -137,12 +123,12 @@ function History({ bot, match }) {
   while (count < match.history.length) {
     const cells = [];
 
-    for (let c = 0; c < 50; c++, round++) {
+    for (let c = 0; c < cellsPerRow; c++, round++) {
       if (rounds.has(round)) count++;
 
       cells.push(
         <TableCell key={ key++ }>
-          <MatchCell  bot={ bot } match={ rounds.get(round) } text={ round } />
+          <MatchCell bot={ bot } match={ rounds.get(round) } text={ round } />
         </TableCell>
       );
     }

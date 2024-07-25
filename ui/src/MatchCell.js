@@ -26,6 +26,10 @@ export default function MatchCell({ bot, match, text, background }) {
       linkStyle.padding = (String(text).length > 1) ? "3px" : "3px 7px";
       linkStyle.borderRadius = "3px";
 
+      if (text >= 100) {
+        linkStyle.fontSize = "0.66em";
+      }
+
       return (
         <Link to={ path } style={ linkStyle }>{ text }</Link>
       );
@@ -38,6 +42,12 @@ export default function MatchCell({ bot, match, text, background }) {
         <Link to={ path } style={ linkStyle }>&#11044;</Link>
       );
     }
+  }
+
+  if (text >= 100) {
+    return (
+      <span style={{ fontSize: "0.9em" }}>{ text }</span>
+    );
   }
 
   return (

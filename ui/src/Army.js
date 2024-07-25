@@ -255,7 +255,7 @@ icons.set("WidowMine", WidowMine);
 icons.set("Zealot", Zealot);
 icons.set("Zergling", Zergling);
 
-const armyStyle = { position: "relative", display: "flex", alignItems: "center" };
+const armyStyle = { position: "relative", display: "flex", alignItems: "center", flexWrap: "wrap" };
 const iconStyle = { border: "solid goldenrod", borderRadius: "6px", marginRight: "3px", width: "28px", height: "28px" };
 const countStyle = { fontSize: "28px" };
 const crossStyle = { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%" };
@@ -282,7 +282,7 @@ export default function Army({ army, loss }) {
   if (loss) {
     if (!elements.length) return (<div>No losses</div>);
 
-    elements.push(<Cross key={ key++ } size={ elements.length } />);
+    elements.push(<Cross key={ key++ } />);
   }
 
   return (<div style={ armyStyle }>{ elements }</div>);
@@ -304,12 +304,11 @@ function UnitIcon({ unit }) {
   }
 }
 
-function Cross({ size }) {
-  const width = size * 10;
-
+function Cross() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox={ "0 0 " + width + " 10" } style={ crossStyle }>
-      <line x1="0" y1="10" x2={ width } y2="0" stroke="red" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox={ "0 0 50 30" } style={ crossStyle }>
+      <line x1="0" y1="5" x2="50" y2="25" stroke="red" />
+      <line x1="0" y1="25" x2="50" y2="5" stroke="red" />
     </svg>
   );
 }
