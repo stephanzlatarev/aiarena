@@ -7,6 +7,7 @@ async function go() {
     const replay = await Replay.load(file);
 
     console.log(replay.events.map(a => a.toString()).join("\r\n"));
+    console.log("Side:", replay.side);
     console.log("Player 1:", count(replay.units, 1));
     console.log("Player 2:", count(replay.units, 2));
 

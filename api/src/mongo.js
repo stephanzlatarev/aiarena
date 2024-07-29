@@ -15,15 +15,20 @@ async function connect(collection) {
 export async function getBotInfo(bot) {
   if (!bot || !bot.length) return;
 
-  const info = { bot: bot, ranking: {}, matches: [] };
+  const info = { bot: bot, ranking: {}, matches: [], opponents: [] };
 
   const rankings = await connect("rankings");
   info.ranking = await rankings.findOne({ bot: bot });
 
-  const matches = await connect("matches");
-  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, player1: 1, player2: 1, winner: 1, warnings: 1, overview: 1 };
+  let cursor = rankings.find({}).project({ _id: 0, bot: 1, division: 1 });
+  while (await cursor.hasNext()) {
+    info.opponents.push(await cursor.next());
+  }
 
-  let cursor = matches.find({ player1: bot }).project(matchProjection);
+  const matches = await connect("matches");
+  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, side: 1, player1: 1, player2: 1, winner: 1, warnings: 1, overview: 1 };
+
+  cursor = matches.find({ player1: bot }).project(matchProjection);
   while (await cursor.hasNext()) {
     info.matches.push(await cursor.next());
   }
@@ -40,7 +45,7 @@ export async function getMatchInfo(match) {
   if (!match || !match.length) return;
 
   const matches = await connect("matches");
-  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, player1: 1, player2: 1, duration: 1, winner: 1, warnings: 1, overview: 1, timeline: 1 };
+  const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, side: 1, player1: 1, player2: 1, duration: 1, winner: 1, warnings: 1, overview: 1, timeline: 1 };
   const matchInfo = await matches.findOne({ match: Number(match) }, { projection: matchProjection });
 
   const rankings = await connect("rankings");
@@ -61,7 +66,7 @@ export async function getMatchInfo(match) {
 
 async function listMatches(matches, player1, player2) {
   const list = [];
-  const projection = { _id: 0, round: 1, match: 1, time: 1, map: 1, winner: 1, warnings: 1 };
+  const projection = { _id: 0, round: 1, match: 1, time: 1, map: 1, side: 1, winner: 1, warnings: 1 };
   const cursor = matches.find({ player1: player1, player2: player2 }).project(projection);
 
   while (await cursor.hasNext()) {

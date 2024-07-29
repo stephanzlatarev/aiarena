@@ -21,7 +21,7 @@ const MAP_ZONES = {
   SiteDelta513AIE: SiteDelta513AIE,
 };
 
-const VERSION = 6;
+const VERSION = 7;
 const COMPETITION = 27;
 
 const TRACE = false;
@@ -184,6 +184,7 @@ async function processRounds(competition) {
       console.log("Match:", match.id);
 
       const map = maps.get(match.map);
+      let side = 0;
       let warnings;
       let timeline;
       let overview;
@@ -191,7 +192,8 @@ async function processRounds(competition) {
       if (match.replay && map) {
         try {
           const replay = await Replay.load(match.replay);
-  
+
+          side = replay.side;
           warnings = [...replay.warnings];
           timeline = getTimeline(replay, MAP_ZONES[map]);
           overview = getOverview(replay, timeline);
@@ -211,6 +213,7 @@ async function processRounds(competition) {
         match: match.id,
         time: match.time,
         map: map,
+        side: side,
         player1: match.player1,
         player2: match.player2,
         duration: match.duration,

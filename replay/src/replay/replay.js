@@ -27,6 +27,12 @@ export default class Replay {
       }
 
       await collector.collect();
+
+      if (collector.bases && collector.bases.player1 && collector.bases.player2) {
+        this.side = (collector.bases.player1.x < collector.bases.player2.x) ? 1 : 2;
+      } else {
+        this.side = 0;
+      }
     } finally {
       collector.close();
     }
@@ -53,6 +59,7 @@ export default class Replay {
 
 class EventCollector {
 
+  bases = { player1: null, player2: null };
   sources = new Map();
   tick = new Map();
 
@@ -110,6 +117,9 @@ class EventCollector {
         const event = events[0];
 
         event.resolve(this.replay);
+
+        if (!this.bases.player1 && (event.type === Event.Enter) && (event.pid === 1)) this.bases.player1 = this.replay.unit(event.sid);
+        if (!this.bases.player2 && (event.type === Event.Enter) && (event.pid === 2)) this.bases.player2 = this.replay.unit(event.sid);
 
         this.replay.events.push(event);
         this.tick.delete(event.source);

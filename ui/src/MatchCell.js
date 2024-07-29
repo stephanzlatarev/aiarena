@@ -48,9 +48,13 @@ export default function MatchCell({ bot, match, text, background }) {
     return (
       <span style={{ fontSize: "0.9em" }}>{ text }</span>
     );
-  }
+  } else if (text) {
+    return (<span>{ text }</span>);
+  } else {
+    const color = background ? background : "white";
 
-  return (
-    <span>{ text ? text : "-" }</span>
-  );
+    return (
+      <span style={{ padding: "0px 3px", color: color, backgroundColor: color }}>&#11044;</span>
+    );
+  }
 }
