@@ -236,18 +236,23 @@ function Sparring({ bot, matches, ranking, opponents }) {
   );
 
   if (SmallScreen) {
+    const bg = {
+      width: "110px", height: "72px", marginLeft: "1rem", marginRight: "1rem",
+      backgroundSize: "auto 72px", backgroundRepeat: "no-repeat", backgroundPositionX: "center", backgroundColor: "#444444",
+    };
     const rows = list.map(info => (
       <div key={ key++ } style={{ borderTop: "solid 1px gray", padding: "1rem" }}>
-        <span style={{ fontWeight: "bold" }}>{ info.opponent }</span> { (info.winRate * 100).toFixed(2) }% wins
-        <Army army={ info.matches.armyBuild } />
+        <span style={{ fontWeight: "bold" }}>{ info.opponent }</span>
+        <span style={{ color: getWinRateColor(info.winRate), fontWeight: "bold", float: "right" }}>{ (info.winRate * 100).toFixed(2) }% wins</span>
+        <br />
+        <div style={{ float: "right" }}><Army army={ info.matches.armyBuild } /></div>
+        <br style={{ clear: "both" }} />
 
         {
           MAP_NAMES.map(map => (
             <div key={ key++ } style={{ paddingTop: "0.5rem", display: "flex" }}>
-              <div style={{ width: "40%", textAlign: "center", backgroundColor: "#444444", marginLeft: "1rem", marginRight: "1rem" }}>
-                <img src={ "/map/" + map + ".jpg" } style={{ height: "60px" }} />
-              </div>
-              <div style={{ width: "60%" }}>
+              <div style={{ ...bg, backgroundImage: "url('/map/" + map + ".jpg')" }} />
+              <div>
                 { map }
                 <br />
                 { info.matches[1][map].map(match => (<MatchCell key={ key++ } bot={ bot } match={ match } background="lightGray" />)) }
@@ -273,7 +278,7 @@ function Sparring({ bot, matches, ranking, opponents }) {
   const rows = list.map(info => (
     <TableRow key={ key++ }>
       <TableCell style={{ whiteSpace: "nowrap", fontWeight: "bold" }}>{ info.opponent }</TableCell>
-      <TableCell>{ (info.winRate * 100).toFixed(2) + "%" }</TableCell>
+      <TableCell style={{ color: getWinRateColor(info.winRate), fontWeight: "bold" }}>{ (info.winRate * 100).toFixed(2) + "%" }</TableCell>
       <TableCell style={{ minWidth: "260px" }}><Army army={ info.matches.armyBuild } /></TableCell>
       {
         MAP_NAMES.map(map => (
@@ -331,6 +336,18 @@ function Sparring({ bot, matches, ranking, opponents }) {
       </Table>
     </TableContainer>
   );
+}
+
+function getWinRateColor(rate) {
+  if (rate < 0.34) {
+    return "#990000";
+  } else if (rate < 0.67) {
+    return "#999900";
+  } else if (rate <= 1.00) {
+    return "#009900";
+  } else {
+    return "white";
+  }
 }
 
 function splitSparringMatchesByMapSideVersion(matches, lastUpdate) {

@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 
-const COLOR_GRAY = "gray";
+const COLOR_YELLOW = "#AAAA00";
 const COLOR_GREEN = "#00AA00";
 const COLOR_RED = "#AA0000";
 
 export default function MatchCell({ bot, match, text, background }) {
-  let status = COLOR_GRAY;
+  let status = COLOR_YELLOW;
 
   if (match) {
     if (bot === match.winner) {
