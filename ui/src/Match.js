@@ -122,9 +122,13 @@ function History({ bot, match }) {
 
   while (count < match.history.length) {
     const cells = [];
+    let countInRound = 0;
 
     for (let c = 0; c < cellsPerRow; c++, round++) {
-      if (rounds.has(round)) count++;
+      if (rounds.has(round)) {
+        count++;
+        countInRound++;
+      }
 
       cells.push(
         <TableCell key={ key++ }>
@@ -133,7 +137,9 @@ function History({ bot, match }) {
       );
     }
 
-    rows.push(<TableRow key={ key++ }>{ cells }</TableRow>);
+    if (countInRound) {
+      rows.push(<TableRow key={ key++ }>{ cells }</TableRow>);
+    }
   }
 
   return (

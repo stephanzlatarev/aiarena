@@ -20,7 +20,7 @@ export async function getBotInfo(bot) {
   const rankings = await connect("rankings");
   info.ranking = await rankings.findOne({ bot: bot });
 
-  let cursor = rankings.find({}).project({ _id: 0, bot: 1, division: 1 });
+  let cursor = rankings.find({}).project({ _id: 0, bot: 1, division: 1, elo: 1 });
   while (await cursor.hasNext()) {
     info.opponents.push(await cursor.next());
   }

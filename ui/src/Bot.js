@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useAsyncValue, useNavigate } from "react-router-dom";
+import { useAsyncValue, useNavigate } from "react-router-dom";
 import List from "@mui/material/List";
 import Paper from "@mui/material/Paper";
 import Tab from "@mui/material/Tab";
@@ -12,7 +12,6 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
 import MatchCell from "./MatchCell";
-import Rating from "./Rating";
 import { SmallScreen } from "./screen";
 import displayTime from "./time";
 
@@ -31,16 +30,12 @@ export default function Bot({ tab }) {
       <Tabs value={ tab } onChange={ (_, tab) => navigate("/bot/" + bot + "/" + tab) }>
         <Tab label="Rounds" value="rounds" />
         <Tab label="Sparring" value="sparring" />
-        <Tab label="Worst matches" value="worst" />
       </Tabs>
       <TabPanel tab={ tab } index="rounds">
-        <Rounds bot={ bot } matches={ matches } />
+        <Rounds bot={ bot } matches={ matches } ranking={ ranking } opponents={ opponents } />
       </TabPanel>
       <TabPanel tab={ tab } index="sparring">
         <Sparring bot={ bot } matches={ matches } ranking={ ranking } opponents={ opponents } />
-      </TabPanel>
-      <TabPanel tab={ tab } index="worst">
-        <MatchList bot={ bot } matches={ matches } />
       </TabPanel>
     </Paper>
   );
@@ -58,41 +53,44 @@ function TabPanel({ children, tab, index }) {
   return null;
 }
 
-function Rounds({ bot, matches }) {
+function Rounds({ bot, matches, ranking, opponents }) {
   const cols = [];
   const rows = [];
   const style = { margin: "0px", padding: "1px", textAlign: "center" };
-  const opponents = new Map();
+  const bots = new Map();
   let rounds = 0;
   let key = 1;
 
-  for (const match of matches) {
-    let info = opponents.get(match.opponent);
-
-    if (!info) {
-      info = { opponent: match.opponent, cells: [], count: 0, results: [], wins: 0 };
-      opponents.set(match.opponent, info);
+  for (const opponent of opponents) {
+    if ((opponent.bot !== bot) && (!SmallScreen || (opponent.division === ranking.division))) {
+      bots.set(opponent.bot, { opponent: opponent.bot, elo: opponent.elo, cells: [], count: 0, results: [], wins: 0 });
     }
-
-    rounds = Math.max(match.round, rounds);
-
-    info.count++;
-
-    if (match.winner === bot) {
-      info.wins++;
-      info.results[match.round] = 1;
-    } else {
-      info.results[match.round] = -1;
-    }
-
-    info.cells[match.round] = (
-      <TableCell key={ key++ } style={ style }>
-        <MatchCell bot={ bot } match={ match } />
-      </TableCell>
-    );
   }
 
-  const opponentNames = getOrderedOpponentsNames(opponents, rounds);
+  for (const match of matches) {
+    const info = bots.get(match.opponent);
+
+    if (info) {
+      rounds = Math.max(match.round, rounds);
+
+      info.count++;
+
+      if (match.winner === bot) {
+        info.wins++;
+        info.results[match.round] = 1;
+      } else {
+        info.results[match.round] = -1;
+      }
+
+      info.cells[match.round] = (
+        <TableCell key={ key++ } style={ style }>
+          <MatchCell bot={ bot } match={ match } />
+        </TableCell>
+      );
+    }
+  }
+
+  const opponentNames = [...bots.values()].sort((a, b) => (a.elo - b.elo)).map(info => info.opponent);
 
   for (const opponent of opponentNames) {
     cols.push(<TableCell key={ key++ } style={{ ...style, writingMode: "vertical-lr", textOrientation: "sideways", textAlign: "right", paddingBottom: "0.5rem" }}>{ opponent }</TableCell>);
@@ -104,7 +102,7 @@ function Rounds({ bot, matches }) {
     let hasOpponentsInThisRound = false;
 
     for (const opponent of opponentNames) {
-      const info = opponents.get(opponent);
+      const info = bots.get(opponent);
 
       if (info && info.cells[round]) {
         opponentCols.push(info.cells[round]);
@@ -139,43 +137,6 @@ function Rounds({ bot, matches }) {
       </Table>
     </TableContainer>
   );
-}
-
-function getOrderedOpponentsNames(opponents, rounds) {
-  const list = [...opponents.values()];
-
-  for (const info of list) {
-    info.lastMatches = 0;
-    info.lastWins = 0;
-
-    for (let r = rounds - 10; r <= rounds; r++) {
-      const result = info.results[r];
-      if (result) info.lastMatches++;
-      if (result > 0) info.lastWins++;
-    }
-
-    info.isInSameDivision = (info.lastMatches >= 8);
-  }
-
-  list.sort(function (a, b) {
-    if (a.isInSameDivision && b.isInSameDivision) {
-      if (a.lastWins !== b.lastWins) {
-        return (b.lastWins - a.lastWins);
-      } else {
-        return (b.wins * a.count - a.wins * b.count);
-      }
-    } else if (a.isInSameDivision) {
-      return -1;
-    } else if (b.isInSameDivision) {
-      return 1;
-    } else if (a.count === b.count) {
-      return (b.wins * a.count - a.wins * b.count);
-    } else {
-      return (b.count - a.count);
-    }
-  });
-
-  return list.map(info => info.opponent);
 }
 
 const MAP_NAMES = ["Equilibrium513AIE", "GoldenAura513AIE", "Gresvan513AIE", "HardLead513AIE", "Oceanborn513AIE", "SiteDelta513AIE"];
@@ -438,52 +399,6 @@ function sizeAndReverse(array, length) {
   while (array.length < length) array.push(null);
   array.length = length;
   return array.reverse();
-}
-
-function MatchList({ bot, matches }) {
-  const worst = matches.filter(match => (match.score < 0)).sort(orderByScore);
-  worst.length = 30;
-
-  const rows = worst.map(match => (
-    <TableRow key={ match.match }>
-      <TableCell><Link to={ "/bot/" + bot + "/match/" + match.match }>{ match.match }</Link></TableCell>
-      <TableCell>{ match.round }</TableCell>
-      <TableCell>{ displayTime(match.time) }</TableCell>
-      <TableCell>{ match.map }</TableCell>
-      <TableCell>{ match.opponent }</TableCell>
-      <TableCell></TableCell>
-      <TableCell>Loss</TableCell>
-      <TableCell><Rating performance={ Math.abs(match.overview.own.score) } /></TableCell>
-      <TableCell><Rating capacity={ match.overview.own.militaryCapacity } performance={ match.overview.own.militaryPerformance } /></TableCell>
-      <TableCell><Rating capacity={ match.overview.own.economyCapacity } performance={ match.overview.own.economyPerformance } /></TableCell>
-      <TableCell><Army army={ match.overview.own.armyBuild } /></TableCell>
-    </TableRow>
-  ));
-
-  return (
-    <TableContainer component={ Paper }>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Match</TableCell>
-            <TableCell>Round</TableCell>
-            <TableCell>Time</TableCell>
-            <TableCell>Map</TableCell>
-            <TableCell>Opponent</TableCell>
-            <TableCell>Duration</TableCell>
-            <TableCell>Result</TableCell>
-            <TableCell>Overall score</TableCell>
-            <TableCell>Military score</TableCell>
-            <TableCell>Economy score</TableCell>
-            <TableCell>Best army</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          { rows }
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
 }
 
 function addScore(bot, match) {
