@@ -72,6 +72,7 @@ function processFight(replay, map, fight) {
     } else if (event.type === Event.Exit) {
       if (IS_TEMPORARY[event.stype]) continue;
       if (event.stype.indexOf("Egg") >= 0) continue;
+      if (hasDroneBuiltStructure(event, replay)) continue;
 
       addUnit(players[event.pid].died, event.stype, 1);
 
@@ -121,5 +122,24 @@ function addUnit(collection, type, count) {
 function addZone(list, zone) {
   if (zone && (list.indexOf(zone) < 0)) {
     list.push(zone);
+  }
+}
+
+function hasDroneBuiltStructure(event, replay) {
+  if (event.stype !== "Drone") return false;
+
+  const drone = replay.unit(event.sid);
+  let out;
+
+  for (const op of replay.events) {
+    if ((op.sid === event.sid) && (op.type === Event.Make)) out = op.out;
+
+    if ((op.type === Event.Enter) && (op.stype === out)) {
+      const structure = replay.unit(op.sid);
+
+      if ((Math.abs(drone.x - structure.x) <= 1) && (Math.abs(drone.y - structure.y) <= 1)) {
+        return true;
+      }
+    }
   }
 }
