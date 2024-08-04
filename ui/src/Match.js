@@ -10,6 +10,7 @@ import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
 import MatchCell from "./MatchCell";
 import Rating from "./Rating";
+import { SmallScreen } from "./screen";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
@@ -214,7 +215,7 @@ function Timeline({ match, playerMap, width }) {
         divs.right.push(CombatCard(height, event.players[rightPlayer], score(event, rightPlayer)));
 
         pathop = "L";
-        height += 100;
+        height += SmallScreen ? 200 : 100;
         
       } else {
         const leftPlayer = playerMap[1];
@@ -237,9 +238,19 @@ function Timeline({ match, playerMap, width }) {
     }
   }
 
-  const leftSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "right", marginRight: "66%" };
-  const centerSideStyle = { position: "absolute", left: 0, width: "150px", display: "flex", justifyContent: "center", marginLeft: "calc(50% - 75px)", marginRight: "calc(50% - 75px)" };
-  const rightSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "left", marginLeft: "66%" };
+  let leftSideStyle;
+  let centerSideStyle;
+  let rightSideStyle;
+
+  if (SmallScreen) {
+    leftSideStyle = { position: "absolute", left: 0, width: "50%", display: "flex", justifyContent: "right", marginTop: "100px", marginLeft: "0" };
+    centerSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "center", marginLeft: "30%", marginRight: "30%" };
+    rightSideStyle = { position: "absolute", left: 0, width: "50%", display: "flex", justifyContent: "left", marginTop: "100px", marginLeft: "50%" };
+  } else {
+    leftSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "right", marginRight: "66%" };
+    centerSideStyle = { position: "absolute", left: 0, width: "150px", display: "flex", justifyContent: "center", marginLeft: "calc(50% - 75px)", marginRight: "calc(50% - 75px)" };
+    rightSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "left", marginLeft: "66%" };
+  }
 
   return (
     <div width="100%" style={{ position: "relative" }}>
@@ -345,7 +356,7 @@ function MapCard(top, map, leftPlayer, rightPlayer) {
 
 const combatCardStyle = {
   display: "flex", flexDirection: "column", alignItems: "center",
-  border: "solid darkGray", borderRadius: "12px", padding: "0px 12px",
+  border: "solid darkGray", borderRadius: "12px", padding: "0px 12px", margin: "1px",
   backgroundColor: "rgba(255, 255, 255, 0.9)"
 };
 

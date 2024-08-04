@@ -255,9 +255,11 @@ icons.set("WidowMine", WidowMine);
 icons.set("Zealot", Zealot);
 icons.set("Zergling", Zergling);
 
-const armyStyle = { position: "relative", display: "flex", alignItems: "center", flexWrap: "wrap" };
+import { SmallScreen } from "./screen";
+
+const armyStyle = { position: "relative", display: "flex", alignItems: "center", flexWrap: "wrap", zoom: SmallScreen ? "65%" : "100%" };
 const iconStyle = { border: "solid goldenrod", borderRadius: "6px", marginRight: "3px", width: "28px", height: "28px" };
-const countStyle = { fontSize: "28px" };
+const countStyle = { position: "relative", top: "-4px", fontSize: "28px" };
 const crossStyle = { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%" };
 
 export default function Army({ army, loss }) {
@@ -274,8 +276,12 @@ export default function Army({ army, loss }) {
     const types = Object.keys(army).sort((a, b) => (army[b] - army[a]));
 
     for (const unit of types) {
-      elements.push(<span key={ key++ } style={ countStyle }>{ army[unit] }</span>);
-      elements.push(<UnitIcon key={ key++ } unit={ unit } />);
+      elements.push(
+        <span key={ key++ } style={{ whiteSpace: "nowrap" }}>
+          <span style={ countStyle }>{ army[unit] }</span>
+          <UnitIcon unit={ unit } />
+        </span>
+      );
     }
   }
 
