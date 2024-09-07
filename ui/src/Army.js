@@ -294,7 +294,7 @@ export default function Army({ army, loss }) {
   return (<div style={ armyStyle }>{ elements }</div>);
 }
 
-function UnitIcon({ unit }) {
+export function UnitIcon({ unit }) {
   let name = unit;
 
   if (unit.endsWith("Burrowed")) name = unit.substring(0, unit.length - 8);

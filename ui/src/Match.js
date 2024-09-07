@@ -8,6 +8,7 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
+import { UnitIcon } from "./Army";
 import MatchCell from "./MatchCell";
 import Rating from "./Rating";
 import { SmallScreen } from "./screen";
@@ -53,8 +54,31 @@ export default function Match({ bot }) {
     if (playerMap.reverse) infos.reverse();
   }
 
+  if (match.overview && match.overview.players[1].buildOrder && match.overview.players[2].buildOrder) {
+    elements.push(<h3 key="heading-buildorder">Build order</h3>);
+    elements.push(<p key="description-buildorder">
+      Shows the build order of the bot for this match.
+      Time denotes the moment when units appear on map and can be detected by the opponent.
+      For units this is usually after the unit is ordered and the resources are consumed.
+      For buildings this is usually before the building becomes operational.
+    </p>);
+
+    elements.push(<div width="100%" style={{ display: "flex", flexDirection: "row" }}>
+      <BuildOrder buildorder={ prepareBuildOrder(match.overview.players[1].buildOrder) } />
+      <BuildOrder buildorder={ prepareBuildOrder(match.overview.players[2].buildOrder) } />
+    </div>);
+  }
+
   if (match.timeline && (width > 0)) {
-    elements.push(<h3 key="heading-timeline">Timeline (military in red, economy in green)</h3>);
+    elements.push(<h3 key="heading-timeline">Timeline</h3>);
+    elements.push(<p key="description-timeline">
+      Shows economy and military comparison between the opponents, and the main battles in this match.
+      Green line shows value of resource harvest.
+      Red line shows value of army units.
+      Dotted lines mirror the same for the opponent for easy comparison.
+      Green crosses on map show where { bot } killed units.
+      Red crosses on map show where { bot } lost units.
+    </p>);
     elements.push(<Timeline key="timeline" match={ match } playerMap={ playerMap } width={ width } />);
   }
 
@@ -74,7 +98,11 @@ export default function Match({ bot }) {
         { infos }
       </div>
 
-      <h3 key="heading-timeline">History by round (wins in green, losses in red)</h3>
+      <h3 key="heading-history">History</h3>
+      <p key="description-history">
+        Shows history of matches between the two bots ordered by competition round. 
+        Green ones were won by { bot } and red ones were lost.
+      </p>
       <History bot={ bot } match={ match } />
 
       { elements }
@@ -152,6 +180,47 @@ function History({ bot, match }) {
       </Table>
     </TableContainer>
   );
+}
+
+function BuildOrder({ buildorder }) {
+  const rows = [];
+
+  for (const one of buildorder) {
+    const card = [];
+
+    card.push(<span key="time">{ clock(one.loop) }</span>);
+
+    if (one.count) {
+      card.push(<span key="count" style={{ marginLeft: "0.2rem", marginRight: "0.1rem", fontWeight: "bold" }}>{ one.count }</span>);
+    }
+
+    card.push(<UnitIcon key="unit" unit={ one.build } />);
+
+    rows.push(<div key={ rows.length } style={{ marginRight: "1rem", display: "flex", alignItems: "center" }}>{ card }</div>);
+  }
+
+  return (<div style={{ width: "50%", padding: "2rem", display: "flex", flexWrap: "wrap" }}>{ rows }</div>);
+}
+
+function prepareBuildOrder(buildorder) {
+  const order = [];
+  let previous;
+
+  for (const one of buildorder) {
+    if (!one.loop) continue;
+
+    one.count = 0;
+
+    if (previous && (one.loop === previous.loop) && (one.build === previous.build)) {
+      previous.count = previous.count ? previous.count + 1 : 2;
+    } else {
+      order.push(one);
+    }
+
+    previous = one;
+  }
+
+  return order;
 }
 
 function Timeline({ match, playerMap, width }) {

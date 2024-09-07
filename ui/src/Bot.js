@@ -11,6 +11,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
+//import BuildOrderDecisions from "./BuildOrderDecisions";
 import MatchCell from "./MatchCell";
 import { SmallScreen } from "./screen";
 import displayTime from "./time";
@@ -18,13 +19,17 @@ import displayTime from "./time";
 export default function Bot({ tab }) {
   tab = tab ? tab : "rounds";
 
-  const { bot, matches, ranking, opponents } = useAsyncValue();
+  const { bot, buildorder, matches, ranking, opponents } = useAsyncValue();
   const navigate = useNavigate();
 
   for (const match of matches) {
     addScore(bot, match);
   }
 
+  // <Tab label="Build order" value="buildorder" />
+  // <TabPanel tab={ tab } index="buildorder">
+  //   <BuildOrderDecisions bot={ bot } buildorder={ buildorder } />
+  // </TabPanel>
   return (
     <Paper elevation={ 3 }>
       <Tabs value={ tab } onChange={ (_, tab) => navigate("/bot/" + bot + "/" + tab) }>
@@ -90,7 +95,7 @@ function Rounds({ bot, matches, ranking, opponents }) {
     }
   }
 
-  const opponentNames = [...bots.values()].sort((a, b) => (a.elo - b.elo)).map(info => info.opponent);
+  const opponentNames = [...bots.values()].filter(info => (info.count > 0)).sort((a, b) => (a.elo - b.elo)).map(info => info.opponent);
 
   for (const opponent of opponentNames) {
     cols.push(<TableCell key={ key++ } style={{ ...style, writingMode: "vertical-lr", textOrientation: "sideways", textAlign: "right", paddingBottom: "0.5rem" }}>{ opponent }</TableCell>);
@@ -420,8 +425,4 @@ function addScore(bot, match) {
   }
 
   return match;
-}
-
-function orderByScore(a, b) {
-  return (a.score - b.score);
 }

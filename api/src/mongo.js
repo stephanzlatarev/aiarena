@@ -7,6 +7,14 @@ async function connect(collection) {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
     console.log("Connected to MongoDB.");
+
+    const aiarena = client.db("aiarena");
+
+    console.log("Match index by player1 created:", await aiarena.collection("matches").createIndex({ player1: 1, round: 1 }));
+    console.log("Match index by player2 created:", await aiarena.collection("matches").createIndex({ player2: 1, round: 1 }));
+
+    const indexes = await aiarena.collection("matches").listIndexes().toArray();
+    console.log("Indexes:", indexes);
   }
 
   return client.db("aiarena").collection(collection);
@@ -15,7 +23,7 @@ async function connect(collection) {
 export async function getBotInfo(bot) {
   if (!bot || !bot.length) return;
 
-  const info = { bot: bot, ranking: {}, matches: [], opponents: [] };
+  const info = { bot: bot, buildorder: {}, ranking: {}, matches: [], opponents: [] };
 
   const rankings = await connect("rankings");
   info.ranking = await rankings.findOne({ bot: bot });
@@ -28,17 +36,21 @@ export async function getBotInfo(bot) {
   const matches = await connect("matches");
   const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, side: 1, player1: 1, player2: 1, winner: 1, warnings: 1, overview: 1 };
 
-  cursor = matches.find({ player1: bot }).project(matchProjection);
-  while (await cursor.hasNext()) {
-    info.matches.push(await cursor.next());
-  }
-
-  cursor = matches.find({ player2: bot }).project(matchProjection);
-  while (await cursor.hasNext()) {
-    info.matches.push(await cursor.next());
-  }
+  const player1matches = await matches.find({ player1: bot, round: { $gte: 150 }}).project(matchProjection).toArray();
+  const player2matches = await matches.find({ player2: bot, round: { $gte: 150 } }).project(matchProjection).toArray();
+  info.matches = [...player1matches, ...player2matches].map(matchWithoutBuildOrders);
 
   return info;
+}
+
+function matchWithoutBuildOrders(match) {
+  if (match && match.overview && match.overview.players) {
+    for (const player in match.overview.players) {
+      delete match.overview.players[player].buildOrder;
+    }
+  }
+
+  return match;
 }
 
 export async function getMatchInfo(match) {

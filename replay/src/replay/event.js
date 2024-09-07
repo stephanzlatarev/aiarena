@@ -13,13 +13,18 @@ export default class Event {
   static Harm  =  "harm"; // The subject affects the target negatively. Examples: a Zealot attacks a Zergling.
   static Exit  =  "exit"; // The subject disappears. Examples: structure is destroyed, hallucination ends.
 
-  constructor(type, loop, pid, subject, out, target) {
+  constructor(type, loop, pid, subject, out, target, t, x, y) {
     this.type = type;       // Event type
     this.loop = loop;       // Game loop
     this.pid = pid;         // Player id
     this.subject = subject;
     this.target = target;
     this.out = out;         // The output
+
+    // Coordinates for Enter events - initial time and location
+    this.t = t;
+    this.x = x;
+    this.y = y;
   }
 
   resolve(replay) {

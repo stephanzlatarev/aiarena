@@ -1,7 +1,8 @@
 import fs from "fs";
 import https from "https";
-import { readProgress, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
+import { readBuildOrder, readProgress, storeBuildOrder, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
 import Replay from "./replay/replay.js";
+import { default as getMatchBuildOrder, addBuildOrder } from "./timeline/buildorder.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
 
@@ -12,7 +13,7 @@ import HardLead513AIE from "./map/HardLead513AIE.js";
 import Oceanborn513AIE from "./map/Oceanborn513AIE.js";
 import SiteDelta513AIE from "./map/SiteDelta513AIE.js";
 
-const MAP_ZONES = {
+const MAP_INFO = {
   Equilibrium513AIE: Equilibrium513AIE,
   GoldenAura513AIE: GoldenAura513AIE,
   Gresvan513AIE: Gresvan513AIE,
@@ -84,11 +85,14 @@ async function go() {
   console.log(new Date().toISOString(), "Connecting to AI Arena...");
   await call("POST", "/api/auth/login/", SECRETS);
 
+  console.log(new Date().toISOString(), "Reading bots info...");
+  const bots = (await call("GET", "/api/bots/?limit=1000")).results;
+
   console.log(new Date().toISOString(), "Updating rankings...");
-  await processRankings(COMPETITION);
+  await processRankings(COMPETITION, bots);
 
   console.log(new Date().toISOString(), "Updating matches...");
-  await processRounds(COMPETITION);
+  await processRounds(COMPETITION, bots);
 
   console.log(new Date().toISOString(), "Updating overviews...");
   await processOverviews();
@@ -162,10 +166,15 @@ async function getMatches(round) {
     });
 }
 
-async function processRounds(competition) {
+async function processRounds(competition, bots) {
   const maps = await getMaps();
   const progress = (await readProgress(competition)) || { competition: competition, rounds: {} };
   const rounds = await pickRoundsInProgress(competition, progress);
+  const botRace = new Map();
+
+  for (const bot of bots) {
+    botRace.set(bot.name, bot.plays_race.label);
+  }
 
   for (const round of rounds) {
     console.log("Round", round.number);
@@ -184,6 +193,7 @@ async function processRounds(competition) {
       console.log("Match:", match.id);
 
       const map = maps.get(match.map);
+      const mapInfo = MAP_INFO[map];
       let side = 0;
       let warnings;
       let timeline;
@@ -195,8 +205,17 @@ async function processRounds(competition) {
 
           side = replay.side;
           warnings = [...replay.warnings];
-          timeline = getTimeline(replay, MAP_ZONES[map]);
+          timeline = getTimeline(replay, mapInfo);
           overview = getOverview(replay, timeline);
+
+          await storeBuildOrder(match.player1, addBuildOrder(
+            match.player1, map, botRace.get(match.player2), match.player2, match.winner,
+            await readBuildOrder(match.player1), getMatchBuildOrder(replay, mapInfo, 1)
+          ));
+          await storeBuildOrder(match.player2, addBuildOrder(
+            match.player2, map, botRace.get(match.player1), match.player1, match.winner,
+            await readBuildOrder(match.player2), getMatchBuildOrder(replay, mapInfo, 2)
+          ));
         } catch (error) {
           console.log(error.message);
 
@@ -233,8 +252,7 @@ async function processRounds(competition) {
   }
 }
 
-async function processRankings(competition) {
-  const bots = (await call("GET", "/api/bots/?limit=1000")).results;
+async function processRankings(competition, bots) {
   const rank = (await call("GET", "/api/competition-participations/?limit=1000&competition=" + competition)).results;
 
   for (const one of rank) {

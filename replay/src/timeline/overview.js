@@ -1,4 +1,5 @@
 import { getArmyBuild } from "./army.js";
+import getBuildOrder from "./buildorder.js";
 import { averageMilitaryRating, calculateEconomyRating, calculateTechnologyRating } from "./rating.js";
 
 const PLAYER_1 = 1;
@@ -9,6 +10,7 @@ export default function overview(replay, timeline) {
 
   for (const pid of [PLAYER_1, PLAYER_2]) {
     players[pid] = {
+      buildOrder: getBuildOrder(replay, pid),
       armyBuild: getBestArmy(timeline, pid),
       ...averageMilitaryRating(timeline, pid),
       ...calculateEconomyRating(timeline.filter(point => (point.type === "stats")), pid),

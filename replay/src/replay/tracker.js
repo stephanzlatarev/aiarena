@@ -29,7 +29,7 @@ async function readTrackerEvent(events, replay, loop, type, data) {
     case 4: return await readUnitTypeChangeEvent(events, replay, loop, data);
     case 5: return await readUpgradeCompleteEvent(events, loop, data);
     case 6: return readUnitInitEvent(replay, loop, data);
-    case 7: return await readUnitDoneEvent(events, loop, data);
+    case 7: return await readUnitDoneEvent(events, replay, loop, data);
     case 8: return readUnitPositionsEvent();
     case 9: return readPlayerSetupEvent();
   }
@@ -73,7 +73,7 @@ async function readUnitBornEvent(events, replay, loop, data) {
   replay.units.set(unitTag, new Unit(owner, type, unitTag, loop, x, y));
 
   if ((owner === 1) || (owner === 2)) {
-    await events(new Event(Event.Enter, loop, owner, unitTag));
+    await events(new Event(Event.Enter, loop, owner, unitTag, null, null, loop, x, y));
   }
 }
 
@@ -130,10 +130,14 @@ function readUnitInitEvent(replay, loop, data) {
   replay.units.set(id, new Unit(owner, type, id, loop, x, y));
 }
 
-async function readUnitDoneEvent(events, loop, data) {
+async function readUnitDoneEvent(events, replay, loop, data) {
   const unitTag = data["0"] << 18 | data["1"];
+  const unit = replay.unit(unitTag);
+  const t = unit ? unit.enter : null;
+  const x = unit ? unit.x : null;
+  const y = unit ? unit.y : null;
 
-  await events(new Event(Event.Enter, loop, null, unitTag));
+  await events(new Event(Event.Enter, loop, null, unitTag, null, null, t, x, y));
 }
 
 function readUnitPositionsEvent() {

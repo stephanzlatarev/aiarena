@@ -13,6 +13,7 @@ async function connect(collection) {
 
     if (matchIndexes.length < 4) {
       console.log("Competition index created:", await aiarena.collection("progress").createIndex({ competition: 1 }));
+      console.log("Build orders index by bot name created:", await aiarena.collection("buildorders").createIndex({ bot: 1 }));
       console.log("Rankings index by id created:", await aiarena.collection("rankings").createIndex({ id: 1 }));
       console.log("Rankings index by name created:", await aiarena.collection("rankings").createIndex({ bot: 1 }));
       console.log("Match index by id created:", await aiarena.collection("matches").createIndex({ match: 1 }));
@@ -35,6 +36,14 @@ export async function storeProgress(progress) {
 
 export async function storeMatch(match) {
   await (await connect("matches")).updateOne({ match: match.match }, { $set: match }, { upsert: true });
+}
+
+export async function readBuildOrder(bot) {
+  return await (await connect("buildorders")).findOne({ bot: bot });
+}
+
+export async function storeBuildOrder(bot, buildorder) {
+  await (await connect("buildorders")).updateOne({ bot: bot }, { $set: buildorder }, { upsert: true });
 }
 
 export async function storeRanking(ranking) {
