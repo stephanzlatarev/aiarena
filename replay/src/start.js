@@ -1,6 +1,6 @@
 import fs from "fs";
 import https from "https";
-import { readBuildOrder, readProgress, storeBuildOrder, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
+import { deleteRanking, readBuildOrder, readProgress, storeBuildOrder, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
 import Replay from "./replay/replay.js";
 import { default as getMatchBuildOrder, addBuildOrder } from "./timeline/buildorder.js";
 import getOverview from "./timeline/overview.js";
@@ -258,16 +258,21 @@ async function processRankings(competition, bots) {
   for (const one of rank) {
     const bot = bots.find(bot => (bot.id === one.bot));
 
-    await storeRanking({
-      id: bot.id,
-      bot: bot.name,
-      race: bot.plays_race.label,
-      competition: competition,
-      elo: one.elo,
-      winRate: one.win_perc,
-      division: one.division_num,
-      lastUpdate: bot.bot_zip_updated,
-    });
+    if (one.active) {
+      await storeRanking({
+        id: bot.id,
+        bot: bot.name,
+        race: bot.plays_race.label,
+        competition: competition,
+        elo: one.elo,
+        winRate: one.win_perc,
+        division: one.division_num,
+        lastUpdate: bot.bot_zip_updated,
+        user: bot.user,
+      });
+    } else {
+      await deleteRanking(bot.name);
+    }
   }
 }
 

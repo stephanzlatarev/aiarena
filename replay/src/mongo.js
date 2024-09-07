@@ -50,6 +50,10 @@ export async function storeRanking(ranking) {
   await (await connect("rankings")).updateOne({ bot: ranking.bot }, { $set: ranking }, { upsert: true });
 }
 
+export async function deleteRanking(bot) {
+  await (await connect("rankings")).deleteOne({ bot: bot });
+}
+
 export async function traverseMatches(projection, handle) {
   const matches = await connect("matches");
   const cursor = matches.find({}).project({ ...projection, _id: 0 });

@@ -10,7 +10,9 @@ import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
 import Rating from "./Rating";
 
+const HOUSEBOTS_AUTHOR = 133;
 const DivisionHeader = { border: 0, backgroundImage: "linear-gradient(#556cd6, white)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
+const ProBotsHeader = { border: 0, backgroundImage: "linear-gradient(white, #9fcc9f)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
 
 export default function Rankings() {
   const rankings = useAsyncValue().sort(function(a, b) {
@@ -24,7 +26,12 @@ export default function Rankings() {
   let division;
   let rank = 1;
 
+  const probots = new Set();
+  let probotsCutoffShown = false;
+
   for (const one of rankings) {
+    if (!one.race) continue;
+
     const bot = one.bot;
     const path = "/bot/" + bot;
 
@@ -64,6 +71,15 @@ export default function Rankings() {
     );
 
     if (one.division) rank++;
+
+    if (!probotsCutoffShown && (one.user !== HOUSEBOTS_AUTHOR)) {
+      probots.add(one.user);
+
+      if (probots.size === 16) {
+        rows.push(<TableRow key="probots-tournament"><TableCell colSpan={ 9 } style={ ProBotsHeader }>ProBots Tournament Cut-off</TableCell></TableRow>);
+        probotsCutoffShown = true;
+      }
+    }
   }
 
   return (
