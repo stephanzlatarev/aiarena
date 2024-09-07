@@ -130,6 +130,7 @@ icons.set("Adept", Adept);
 icons.set("Archon", Archon);
 icons.set("Armory", Armory);
 icons.set("Assimilator", Assimilator);
+icons.set("AssimilatorRich", Assimilator);
 icons.set("AutoTurret", AutoTurret);
 icons.set("Baneling", Baneling);
 icons.set("BanelingNest", BanelingNest);
