@@ -63,10 +63,12 @@ export default function Match({ bot }) {
       For buildings this is usually before the building becomes operational.
     </p>);
 
-    elements.push(<div width="100%" style={{ display: "flex", flexDirection: "row" }}>
-      <BuildOrder buildorder={ prepareBuildOrder(match.overview.players[1].buildOrder) } />
+    const buildorders = [
+      <BuildOrder buildorder={ prepareBuildOrder(match.overview.players[1].buildOrder) } />,
       <BuildOrder buildorder={ prepareBuildOrder(match.overview.players[2].buildOrder) } />
-    </div>);
+    ];
+    if (playerMap.reverse) buildorders.reverse();
+    elements.push(<div width="100%" style={{ display: "flex", flexDirection: "row" }}>{ buildorders }</div>);
   }
 
   if (match.timeline && (width > 0)) {
