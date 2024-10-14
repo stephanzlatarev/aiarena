@@ -1,5 +1,7 @@
 import { MongoClient } from "mongodb";
 
+const START_ROUND = 250;
+
 const client = new MongoClient("mongodb://mongo:27017");
 
 async function connect(collection) {
@@ -36,8 +38,8 @@ export async function getBotInfo(bot) {
   const matches = await connect("matches");
   const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, side: 1, player1: 1, player2: 1, winner: 1, warnings: 1, overview: 1 };
 
-  const player1matches = await matches.find({ player1: bot, round: { $gte: 150 }}).project(matchProjection).toArray();
-  const player2matches = await matches.find({ player2: bot, round: { $gte: 150 } }).project(matchProjection).toArray();
+  const player1matches = await matches.find({ player1: bot, round: { $gte: START_ROUND }}).project(matchProjection).toArray();
+  const player2matches = await matches.find({ player2: bot, round: { $gte: START_ROUND } }).project(matchProjection).toArray();
   info.matches = [...player1matches, ...player2matches].map(matchWithoutBuildOrders);
 
   return info;
