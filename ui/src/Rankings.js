@@ -11,8 +11,18 @@ import Army from "./Army";
 import Rating from "./Rating";
 
 const HOUSEBOTS_AUTHOR = 133;
+
+const AUTHOR_ALIAS = new Map();
+AUTHOR_ALIAS.set(1029, 698);
+AUTHOR_ALIAS.set(698, 1029);
+
+const AUTHOR_REMOVED = new Set();
+AUTHOR_REMOVED.add(1711);
+
 const DivisionHeader = { border: 0, backgroundImage: "linear-gradient(#556cd6, white)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
 const ProBotsHeader = { border: 0, backgroundImage: "linear-gradient(white, #9fcc9f)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
+const ProBotsDisqualified = { textDecoration: "line-through", textDecorationThickness: "2px", textDecorationColor: "#9fcc9f" };
+const AuthorRemoved = {     fontSize: "0.6rem", paddingLeft: "0.5rem", color: "#9fcc9f", textTransform: "uppercase", fontWeight: "bold", whiteSpace: "nowrap" };
 
 export default function Rankings() {
   const rankings = useAsyncValue().sort(function(a, b) {
@@ -49,12 +59,16 @@ export default function Rankings() {
 
     if (!one.division) rank = null;
 
+    const botNameStyle = AUTHOR_REMOVED.has(one.user) ? ProBotsDisqualified : {};
+    const botNameAppendix = AUTHOR_REMOVED.has(one.user) ? (<span style={ AuthorRemoved }>Author removed</span>) : null;
+
     rows.push(
       <TableRow key={ bot }>
         <TableCell>{ rank }</TableCell>
         <TableCell component="th" scope="row">
           <img src={ "/" + one.race + ".png" } width="17" style={{ position: "relative", top: "4px", marginRight: "5px" }} />
-          <Link to={ path }>{ bot }</Link>
+          <Link to={ path } style={ botNameStyle }>{ bot }</Link>
+          { botNameAppendix }
         </TableCell>
         <TableCell>{ one.winRate.toFixed(2) }%</TableCell>
         <TableCell>{ one.elo }</TableCell>
@@ -72,7 +86,7 @@ export default function Rankings() {
 
     if (one.division) rank++;
 
-    if (!probotsCutoffShown && (one.user !== HOUSEBOTS_AUTHOR)) {
+    if (!probotsCutoffShown && (one.user !== HOUSEBOTS_AUTHOR) && !probots.has(AUTHOR_ALIAS.get(one.user)) && !AUTHOR_REMOVED.has(one.user)) {
       probots.add(one.user);
 
       if (probots.size === 16) {
