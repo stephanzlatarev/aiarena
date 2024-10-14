@@ -59,8 +59,8 @@ export default function Rankings() {
 
     if (!one.division) rank = null;
 
-    const botNameStyle = AUTHOR_REMOVED.has(one.user) ? ProBotsDisqualified : {};
-    const botNameAppendix = AUTHOR_REMOVED.has(one.user) ? (<span style={ AuthorRemoved }>Author removed</span>) : null;
+    const botNameStyle = (!probotsCutoffShown && AUTHOR_REMOVED.has(one.user)) ? ProBotsDisqualified : {};
+    const botNameAppendix = (!probotsCutoffShown && AUTHOR_REMOVED.has(one.user)) ? (<span style={ AuthorRemoved }>Author removed</span>) : null;
 
     rows.push(
       <TableRow key={ bot }>
