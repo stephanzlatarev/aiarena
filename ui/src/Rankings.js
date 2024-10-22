@@ -16,8 +16,19 @@ const AUTHOR_ALIAS = new Map();
 AUTHOR_ALIAS.set(1029, 698);
 AUTHOR_ALIAS.set(698, 1029);
 
+const BOT_REMOVED = new Set();
+BOT_REMOVED.add(680);
+BOT_REMOVED.add(691);
+BOT_REMOVED.add(696);
+BOT_REMOVED.add(707);
+BOT_REMOVED.add(716);
+BOT_REMOVED.add(717);
+BOT_REMOVED.add(746);
+
 const AUTHOR_REMOVED = new Set();
 AUTHOR_REMOVED.add(1711);
+AUTHOR_REMOVED.add(1804);
+AUTHOR_REMOVED.add(1858);
 
 const DivisionHeader = { border: 0, backgroundImage: "linear-gradient(#556cd6, white)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
 const ProBotsHeader = { border: 0, backgroundImage: "linear-gradient(white, #9fcc9f)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
@@ -25,13 +36,19 @@ const ProBotsDisqualified = { textDecoration: "line-through", textDecorationThic
 const AuthorRemoved = {     fontSize: "0.6rem", paddingLeft: "0.5rem", color: "#9fcc9f", textTransform: "uppercase", fontWeight: "bold", whiteSpace: "nowrap" };
 
 export default function Rankings() {
-  const rankings = useAsyncValue().sort(function(a, b) {
+  const rankings = useAsyncValue()
+  .map(function(one) {
+    if (BOT_REMOVED.has(one.id)) one.division = 0;
+    return one;
+  })
+  .sort(function(a, b) {
     if (!a.division && !b.division) return a.bot.localeCompare(b.bot);
     if (!a.division) return 1;
     if (!b.division) return -1;
 
     return (a.division !== b.division) ? a.division - b.division : b.elo - a.elo;
   });
+
   const rows = [];
   let division;
   let rank = 1;
@@ -46,7 +63,7 @@ export default function Rankings() {
     const path = "/bot/" + bot;
 
     if (one.division !== division) {
-      const separator = one.division ? "Division " + one.division : "Joining or leaving";
+      const separator = one.division ? "Division " + one.division : "Inactive";
 
       rows.push(
         <TableRow key={ one.division }>
