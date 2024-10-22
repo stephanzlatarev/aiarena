@@ -24,6 +24,7 @@ const MAP_INFO = {
 
 const VERSION = 7;
 const COMPETITION = 27;
+const COMPETITION_IS_ACTIVE = false;
 
 const TRACE = false;
 const SECRETS = JSON.parse(fs.readFileSync("./secrets/secrets.json"));
@@ -258,7 +259,7 @@ async function processRankings(competition, bots) {
   for (const one of rank) {
     const bot = bots.find(bot => (bot.id === one.bot));
 
-    if (one.active) {
+    if (one.active || !COMPETITION_IS_ACTIVE) {
       await storeRanking({
         id: bot.id,
         bot: bot.name,
