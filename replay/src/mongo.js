@@ -15,7 +15,7 @@ async function connect(collection) {
       console.log("Competition index created:", await aiarena.collection("progress").createIndex({ competition: 1 }));
       console.log("Build orders index by bot name created:", await aiarena.collection("buildorders").createIndex({ bot: 1 }));
       console.log("Rankings index by id created:", await aiarena.collection("rankings").createIndex({ id: 1 }));
-      console.log("Rankings index by name created:", await aiarena.collection("rankings").createIndex({ bot: 1 }));
+      console.log("Rankings index by name created:", await aiarena.collection("rankings").createIndex({ competition: 1, bot: 1 }));
       console.log("Match index by id created:", await aiarena.collection("matches").createIndex({ match: 1 }));
       console.log("Match index by player1 created:", await aiarena.collection("matches").createIndex({ player1: 1 }));
       console.log("Match index by player2 created:", await aiarena.collection("matches").createIndex({ player2: 1 }));
@@ -47,16 +47,16 @@ export async function storeBuildOrder(bot, buildorder) {
 }
 
 export async function storeRanking(ranking) {
-  await (await connect("rankings")).updateOne({ bot: ranking.bot }, { $set: ranking }, { upsert: true });
+  await (await connect("rankings")).updateOne({ competition: ranking.competition, bot: ranking.bot }, { $set: ranking }, { upsert: true });
 }
 
-export async function deleteRanking(bot) {
-  await (await connect("rankings")).deleteOne({ bot: bot });
+export async function deleteRanking(competition, bot) {
+  await (await connect("rankings")).deleteOne({ competition: competition, bot: bot });
 }
 
-export async function traverseMatches(projection, handle) {
+export async function traverseMatches(selection, projection, handle) {
   const matches = await connect("matches");
-  const cursor = matches.find({}).project({ ...projection, _id: 0 });
+  const cursor = matches.find(selection).project({ ...projection, _id: 0 });
 
   while (await cursor.hasNext()) {
     handle(await cursor.next());

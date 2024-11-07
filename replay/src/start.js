@@ -23,8 +23,8 @@ const MAP_INFO = {
 };
 
 const VERSION = 7;
-const COMPETITION = 27;
-const COMPETITION_IS_ACTIVE = false;
+const COMPETITION = 28;
+const COMPETITION_IS_ACTIVE = true;
 
 const TRACE = false;
 const SECRETS = JSON.parse(fs.readFileSync("./secrets/secrets.json"));
@@ -96,7 +96,7 @@ async function go() {
   await processRounds(COMPETITION, bots);
 
   console.log(new Date().toISOString(), "Updating overviews...");
-  await processOverviews();
+  await processOverviews(COMPETITION);
 
   console.log(new Date().toISOString(), "Done.");
   process.exit(0);
@@ -272,7 +272,7 @@ async function processRankings(competition, bots) {
         user: bot.user,
       });
     } else {
-      await deleteRanking(bot.name);
+      await deleteRanking(competition, bot.name);
     }
   }
 }
@@ -374,7 +374,7 @@ function findBestArmyBuild(builds) {
   return best;
 }
 
-async function processOverviews() {
+async function processOverviews(competition) {
   const overviews = new Map();
   const ratings = [
     "militaryCapacity", "militaryPerformance",
@@ -382,7 +382,7 @@ async function processOverviews() {
     "technologyCapacity", "technologyPerformance"
   ];
 
-  await traverseMatches({ round: 1, player1: 1, player2: 1, winner: 1, overview: 1 }, function(match) {
+  await traverseMatches({ competition: competition }, { round: 1, player1: 1, player2: 1, winner: 1, overview: 1 }, function(match) {
     if (match.overview) {
       for (const rating of ratings) {
         addRatingOverview(overviews, match.player1, rating, match.overview.players[1][rating]);
@@ -403,7 +403,7 @@ async function processOverviews() {
     overview.armyBuild = bestArmyBuild.army;
     overview.armyBuildWins = bestArmyBuild.wins;
 
-    await storeRanking({ ...overview, bot: player });
+    await storeRanking({ ...overview, competition: competition, bot: player });
   }
 }
 
