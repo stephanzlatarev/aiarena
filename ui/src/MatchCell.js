@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
-const COLOR_YELLOW = "#AAAA00";
 const COLOR_GREEN = "#00AA00";
+const COLOR_YELLOW = "#FFD700";
 const COLOR_RED = "#AA0000";
 
 export default function MatchCell({ bot, match, text, background }) {
@@ -24,7 +24,12 @@ export default function MatchCell({ bot, match, text, background }) {
       linkStyle.backgroundColor = status;
       linkStyle.color = "white";
       linkStyle.padding = (String(text).length > 1) ? "3px" : "3px 7px";
-      linkStyle.borderRadius = "3px";
+
+      if (status === COLOR_YELLOW) {
+        linkStyle.borderRadius = "5px";
+      } else if (status === COLOR_GREEN) {
+        linkStyle.borderRadius = "10px";
+      }
 
       if (text >= 100) {
         linkStyle.fontSize = "0.66em";
@@ -34,12 +39,22 @@ export default function MatchCell({ bot, match, text, background }) {
         <Link to={ path } style={ linkStyle }>{ text }</Link>
       );
     } else {
-      linkStyle.backgroundColor = background ? background : "white";
+      linkStyle.backgroundColor = status;
       linkStyle.color = status;
-      linkStyle.padding = "0px 3px";
+      linkStyle.padding = "0px 0.5em";
+
+      if (status === COLOR_YELLOW) {
+        return (
+          <div style={{ display: "inline-block", width: "18.5px", transform: "scale(0.75) rotate(45deg)" }}>
+            <Link to={ path } style={ linkStyle }>&nbsp;</Link>
+          </div>
+        );
+      } else if (status === COLOR_GREEN) {
+        linkStyle.borderRadius = "10px";
+      }
 
       return (
-        <Link to={ path } style={ linkStyle }>&#11044;</Link>
+        <Link to={ path } style={ linkStyle }>&nbsp;</Link>
       );
     }
   }
