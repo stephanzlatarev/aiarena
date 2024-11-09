@@ -9,6 +9,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
 import Rating from "./Rating";
+import { SmallScreen } from "./screen";
 
 const HOUSEBOTS_AUTHOR = 133;
 
@@ -49,6 +50,7 @@ export default function Rankings() {
     return (a.division !== b.division) ? a.division - b.division : b.elo - a.elo;
   });
 
+  const cols = SmallScreen ? 4 : 8;
   const rows = [];
   let division;
   let rank = 1;
@@ -67,7 +69,7 @@ export default function Rankings() {
 
       rows.push(
         <TableRow key={ one.division }>
-          <TableCell colSpan={ 9 } style={ DivisionHeader }>{ separator }</TableCell>
+          <TableCell colSpan={ cols } style={ DivisionHeader }>{ separator }</TableCell>
         </TableRow>
       );
 
@@ -79,25 +81,33 @@ export default function Rankings() {
     const botNameStyle = (!probotsCutoffShown && AUTHOR_REMOVED.has(one.user)) ? ProBotsDisqualified : {};
     const botNameAppendix = (!probotsCutoffShown && AUTHOR_REMOVED.has(one.user)) ? (<span style={ AuthorRemoved }>Author removed</span>) : null;
 
-    rows.push(
-      <TableRow key={ bot }>
-        <TableCell>{ rank }</TableCell>
-        <TableCell component="th" scope="row">
-          <img src={ "/" + one.race + ".png" } width="17" style={{ position: "relative", top: "4px", marginRight: "5px" }} />
-          <Link to={ path } style={ botNameStyle }>{ bot }</Link>
-          { botNameAppendix }
-        </TableCell>
-        <TableCell>{ one.winRate.toFixed(2) }%</TableCell>
-        <TableCell>{ one.elo }</TableCell>
-        <TableCell>
+    const rowCells = [
+      <TableCell key="1">{ rank }</TableCell>,
+      <TableCell key="2" component="th" scope="row">
+        <img src={ "/" + one.race + ".png" } width="17" style={{ position: "relative", top: "4px", marginRight: "5px" }} />
+        <Link to={ path } style={ botNameStyle }>{ bot }</Link>
+        { botNameAppendix }
+      </TableCell>,
+      <TableCell key="3">{ one.winRate.toFixed(2) }%</TableCell>,
+      <TableCell key="4">{ one.elo }</TableCell>,
+    ];
+    if (!SmallScreen) {
+      rowCells.push(
+        <TableCell key="5">
           <div style={{ display: "flex", alignItems: "center", minWidth: "320px" }}>
             <Army army={ one.armyBuild } />
             <div>({ one.armyBuildWins || 0 } wins)</div>
           </div>
-        </TableCell>
-        <TableCell><Rating capacity={ one.militaryCapacity } performance={ one.militaryPerformance } /></TableCell>
-        <TableCell><Rating capacity={ one.economyCapacity } performance={ one.economyPerformance } /></TableCell>
-        <TableCell><Rating capacity={ one.technologyCapacity } performance={ one.technologyPerformance } /></TableCell>
+        </TableCell>,
+        <TableCell key="6"><Rating capacity={ one.militaryCapacity } performance={ one.militaryPerformance } /></TableCell>,
+        <TableCell key="7"><Rating capacity={ one.economyCapacity } performance={ one.economyPerformance } /></TableCell>,
+        <TableCell key="8"><Rating capacity={ one.technologyCapacity } performance={ one.technologyPerformance } /></TableCell>
+      );
+    }
+
+    rows.push(
+      <TableRow key={ bot }>
+        { rowCells }
       </TableRow>
     );
 
@@ -113,19 +123,27 @@ export default function Rankings() {
     }
   }
 
+  const headerCells = [
+    <TableCell key="1">Rank</TableCell>,
+    <TableCell key="2">Name</TableCell>,
+    <TableCell key="3">Wins</TableCell>,
+    <TableCell key="4">ELO</TableCell>,
+  ];
+  if (!SmallScreen) {
+    headerCells.push(
+      <TableCell key="5">Best army composition</TableCell>,
+      <TableCell key="6">Military score</TableCell>,
+      <TableCell key="7">Economy score</TableCell>,
+      <TableCell key="8">Technology score</TableCell>,
+    );
+  }
+
   return (
     <TableContainer component={ Paper }>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Rank</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>Wins</TableCell>
-            <TableCell>ELO</TableCell>
-            <TableCell>Best army composition</TableCell>
-            <TableCell>Military score</TableCell>
-            <TableCell>Economy score</TableCell>
-            <TableCell>Technology score</TableCell>
+            { headerCells }
           </TableRow>
         </TableHead>
         <TableBody>
