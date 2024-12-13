@@ -144,14 +144,14 @@ function Rounds({ bot, matches, ranking, opponents }) {
   );
 }
 
-const MAP_NAMES = ["Equilibrium513AIE", "GoldenAura513AIE", "Gresvan513AIE", "HardLead513AIE", "Oceanborn513AIE", "SiteDelta513AIE"];
+const MAP_NAMES = ["AbyssalReefAIE", "AutomatonAIE", "BelShirVestigeAIE", "DefendersLandingAIE", "EphemeronAIE", "InterloperAIE"];
 const MAP_DESCRIPTION = {
-  Equilibrium513AIE: "Find inner balance on this map with expansions in close proximity.",
-  GoldenAura513AIE: "Goldenaura is a macro map that features total of 13 blue bases and one golden base...",
-  Gresvan513AIE: "A wide macro map designed around control of the center high and low grounds...",
-  HardLead513AIE: "Short rush distance and multiple paths will force players to split their armies or...",
-  Oceanborn513AIE: "Oceanborn is a standard map set in an underwater world.",
-  SiteDelta513AIE: "Site Delta is a macro map designed with a tight choke in the center...",
+  AbyssalReefAIE: "Take a plunge into the beautiful world below. Rocks will help you take control but watch...",
+  AutomatonAIE: "This map features main bases that are relatively close together by air, but the expansions are more protected.",
+  BelShirVestigeAIE: "Main paths located on the two central hills with a faster road available through the center...",
+  DefendersLandingAIE: "This map favors early aggression but a collapsible tower near the natural expansion can redirect these early attacks.",
+  EphemeronAIE: "A series of small bridges and ramps aid in defense and emphasize positional awareness.",
+  InterloperAIE: "Take one of five paths to reach your opponent, or destroy the rocks to allow free movement between any of them.",
 };
 
 function Sparring({ bot, matches, ranking, opponents }) {
@@ -353,7 +353,7 @@ function splitSparringMatchesByMapSideVersion(matches, lastUpdate) {
     }
   }
 
-  if (last) {
+  if (last && last.overview && last.overview.opponent && last.overview.opponent.armyBuild) {
     split.armyBuild = last.overview.opponent.armyBuild;
   }
 
