@@ -147,11 +147,11 @@ function Rounds({ bot, matches, ranking, opponents }) {
 const MAP_NAMES = ["AbyssalReefAIE", "AutomatonAIE", "BelShirVestigeAIE", "DefendersLandingAIE", "EphemeronAIE", "InterloperAIE"];
 const MAP_DESCRIPTION = {
   AbyssalReefAIE: "Take a plunge into the beautiful world below. Rocks will help you take control but watch...",
-  AutomatonAIE: "This map features main bases that are relatively close together by air, but the expansions are more protected.",
+  AutomatonAIE: "This map features main bases that are relatively close together by air, but the expansions...",
   BelShirVestigeAIE: "Main paths located on the two central hills with a faster road available through the center...",
-  DefendersLandingAIE: "This map favors early aggression but a collapsible tower near the natural expansion can redirect these early attacks.",
+  DefendersLandingAIE: "This map favors early aggression but a collapsible tower near the natural expansion...",
   EphemeronAIE: "A series of small bridges and ramps aid in defense and emphasize positional awareness.",
-  InterloperAIE: "Take one of five paths to reach your opponent, or destroy the rocks to allow free movement between any of them.",
+  InterloperAIE: "Take one of five paths to reach your opponent, or destroy the rocks to allow free movement...",
 };
 
 function Sparring({ bot, matches, ranking, opponents }) {
