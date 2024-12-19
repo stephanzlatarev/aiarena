@@ -21,21 +21,33 @@ const WARRIORS = MILITARY_COEFFICIENT / 100;
 const WORKERS = ECONOMY_COEFFICIENT / 100;
 
 const MAP_SIZE = {
+  AbyssalReefAIE: [152, 136],
+  AcropolisAIE: [140, 136],
+  AutomatonAIE: [148, 148],
   Equilibrium513AIE: [172, 116],
+  EphemeronAIE: [132, 148],
   GoldenAura513AIE: [140, 140],
   Gresvan513AIE: [160, 116],
   HardLead513AIE: [132, 132],
+  InterloperAIE: [132, 140],
   Oceanborn513AIE: [140, 132],
   SiteDelta513AIE: [136, 148],
+  ThunderbirdAIE: [140, 140],
 };
 
 const IMG_SIZE = {
+  AbyssalReefAIE: [600, 536],
+  AcropolisAIE: [600, 582],
+  AutomatonAIE: [600, 600],
   Equilibrium513AIE: [800, 540],
+  EphemeronAIE: [600, 672],
   GoldenAura513AIE: [600, 600],
   Gresvan513AIE: [800, 580],
   HardLead513AIE: [600, 600],
+  InterloperAIE: [600, 635],
   Oceanborn513AIE: [636, 600],
   SiteDelta513AIE: [551, 599],
+  ThunderbirdAIE: [600, 600],
 };
 
 export default function Match({ bot }) {
@@ -64,11 +76,11 @@ export default function Match({ bot }) {
     </p>);
 
     const buildorders = [
-      <BuildOrder buildorder={ prepareBuildOrder(match.overview.players[1].buildOrder) } />,
-      <BuildOrder buildorder={ prepareBuildOrder(match.overview.players[2].buildOrder) } />
+      <BuildOrder key="player1-build" buildorder={ prepareBuildOrder(match.overview.players[1].buildOrder) } />,
+      <BuildOrder key="player2-build" buildorder={ prepareBuildOrder(match.overview.players[2].buildOrder) } />
     ];
     if (playerMap.reverse) buildorders.reverse();
-    elements.push(<div width="100%" style={{ display: "flex", flexDirection: "row" }}>{ buildorders }</div>);
+    elements.push(<div key="builds" width="100%" style={{ display: "flex", flexDirection: "row" }}>{ buildorders }</div>);
   }
 
   if (match.timeline && (width > 0)) {
