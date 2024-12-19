@@ -6,20 +6,32 @@ import { default as getMatchBuildOrder, addBuildOrder } from "./timeline/buildor
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
 
+import AbyssalReefAIE from "./map/AbyssalReefAIE.js";
+import AcropolisAIE from "./map/AcropolisAIE.js";
+import AutomatonAIE from "./map/AutomatonAIE.js";
+import EphemeronAIE from "./map/EphemeronAIE.js";
 import Equilibrium513AIE from "./map/Equilibrium513AIE.js";
 import GoldenAura513AIE from "./map/GoldenAura513AIE.js";
 import Gresvan513AIE from "./map/Gresvan513AIE.js";
 import HardLead513AIE from "./map/HardLead513AIE.js";
+import InterloperAIE from "./map/InterloperAIE.js";
 import Oceanborn513AIE from "./map/Oceanborn513AIE.js";
 import SiteDelta513AIE from "./map/SiteDelta513AIE.js";
+import ThunderbirdAIE from "./map/ThunderbirdAIE.js";
 
 const MAP_INFO = {
+  AbyssalReefAIE: AbyssalReefAIE,
+  AcropolisAIE: AcropolisAIE,
+  AutomatonAIE: AutomatonAIE,
+  EphemeronAIE: EphemeronAIE,
   Equilibrium513AIE: Equilibrium513AIE,
   GoldenAura513AIE: GoldenAura513AIE,
   Gresvan513AIE: Gresvan513AIE,
   HardLead513AIE: HardLead513AIE,
+  InterloperAIE: InterloperAIE,
   Oceanborn513AIE: Oceanborn513AIE,
   SiteDelta513AIE: SiteDelta513AIE,
+  ThunderbirdAIE: ThunderbirdAIE,
 };
 
 const VERSION = 7;
