@@ -144,14 +144,14 @@ function Rounds({ bot, matches, ranking, opponents }) {
   );
 }
 
-const MAP_NAMES = ["AbyssalReefAIE", "AutomatonAIE", "BelShirVestigeAIE", "DefendersLandingAIE", "EphemeronAIE", "InterloperAIE"];
+const MAP_NAMES = ["AbyssalReefAIE", "AcropolisAIE", "AutomatonAIE", "EphemeronAIE", "InterloperAIE", "ThunderbirdAIE"];
 const MAP_DESCRIPTION = {
   AbyssalReefAIE: "Take a plunge into the beautiful world below. Rocks will help you take control but watch...",
+  AcropolisAIE: "A relatively small map for macro plays. Vertical third base expansions are easier to acquire...",
   AutomatonAIE: "This map features main bases that are relatively close together by air, but the expansions...",
-  BelShirVestigeAIE: "Main paths located on the two central hills with a faster road available through the center...",
-  DefendersLandingAIE: "This map favors early aggression but a collapsible tower near the natural expansion...",
   EphemeronAIE: "A series of small bridges and ramps aid in defense and emphasize positional awareness.",
   InterloperAIE: "Take one of five paths to reach your opponent, or destroy the rocks to allow free movement...",
+  ThunderbirdAIE: "Reduced minerals fields at certain locations that yield 5 minerals, allowing workers to...",
 };
 
 function Sparring({ bot, matches, ranking, opponents }) {
@@ -331,6 +331,8 @@ function splitSparringMatchesByMapSideVersion(matches, lastUpdate) {
   }
 
   for (const match of matches) {
+    if (!permap[match.map]) continue;
+
     permap[match.map].push(match);
 
     if (last) {
