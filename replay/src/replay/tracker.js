@@ -67,8 +67,10 @@ async function readUnitBornEvent(events, replay, loop, data) {
   const unitTag = data["0"] << 18 | data["1"];
   const x = data["5"];
   const y = data["6"];
+  const origin = data["9"] ? data["9"].toString("utf8") : null;
 
   if (type.startsWith("Beacon")) return;
+  if (origin && origin.startsWith("Hallucination")) return;
 
   replay.units.set(unitTag, new Unit(owner, type, unitTag, loop, x, y));
 

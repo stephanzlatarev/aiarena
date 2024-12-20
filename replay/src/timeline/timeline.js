@@ -4,7 +4,11 @@ import Event from "../replay/event.js";
 
 const STATS_LOOPS = 160;
 const FIGHT_LOOPS = 60 * 22.4;
-const IS_BASE = { CommandCenter: true, Hatchery: true, Hive: true, Lair: true, Nexus: true, OrbitalCommand: true, PlanetaryFortress: true };
+const IS_BASE = {
+  CommandCenter: true, CommandCenterFlying: true, OrbitalCommand: true, OrbitalCommandFlying: true, PlanetaryFortress: true,
+  Hatchery: true, Hive: true, Lair: true,
+  Nexus: true,
+};
 const IS_TEMPORARY = {
   AdeptPhaseShift: true, Egg: true, InvisibleTargetDummy: true, KD8Charge: true,
   LocustMP: true, LocustMPPrecursor: true, LurkerMPEgg: true,
@@ -91,7 +95,7 @@ function processFight(replay, map, fight) {
 
   for (const unit of replay.units.values()) {
     if (IS_BASE[unit.type] && (unit.exit > fight.loop) && (unit.enter <= fight.end)) {
-      const zone = map.zones[unit.y][unit.x];
+      const zone = map.zones[unit.borny][unit.bornx];
       addZone(players[unit.owner].bases, zone);
     }
   }

@@ -6,6 +6,8 @@ export default class Unit {
     this.type = type;
     this.id = id;
     this.enter = loop ? loop : 0;
+    this.bornx = x;
+    this.borny = y;
     this.x = x;
     this.y = y;
     this.exit = Infinity;
