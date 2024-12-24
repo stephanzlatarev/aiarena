@@ -34,8 +34,8 @@ const MAP_INFO = {
   ThunderbirdAIE: ThunderbirdAIE,
 };
 
-const VERSION = 7;
-const COMPETITION = 28;
+const VERSION = 8;
+const COMPETITION = 30;
 const COMPETITION_IS_ACTIVE = true;
 
 const TRACE = false;
