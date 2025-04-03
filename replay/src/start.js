@@ -35,7 +35,7 @@ const MAP_INFO = {
 };
 
 const VERSION = 8;
-const COMPETITION = 30;
+const COMPETITION = 32;
 const COMPETITION_IS_ACTIVE = true;
 
 const TRACE = false;
