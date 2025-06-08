@@ -16,8 +16,11 @@ import Gresvan513AIE from "./map/Gresvan513AIE.js";
 import HardLead513AIE from "./map/HardLead513AIE.js";
 import InterloperAIE from "./map/InterloperAIE.js";
 import Oceanborn513AIE from "./map/Oceanborn513AIE.js";
+import PersephoneAIE from "./map/PersephoneAIE.js";
+import PylonAIE from "./map/PylonAIE.js";
 import SiteDelta513AIE from "./map/SiteDelta513AIE.js";
 import ThunderbirdAIE from "./map/ThunderbirdAIE.js";
+import TorchesAIE from "./map/TorchesAIE.js";
 
 const MAP_INFO = {
   AbyssalReefAIE: AbyssalReefAIE,
@@ -30,12 +33,15 @@ const MAP_INFO = {
   HardLead513AIE: HardLead513AIE,
   InterloperAIE: InterloperAIE,
   Oceanborn513AIE: Oceanborn513AIE,
+  PersephoneAIE: PersephoneAIE,
+  PylonAIE: PylonAIE,
   SiteDelta513AIE: SiteDelta513AIE,
   ThunderbirdAIE: ThunderbirdAIE,
+  TorchesAIE: TorchesAIE,
 };
 
-const VERSION = 8;
-const COMPETITION = 32;
+const VERSION = 9;
+const COMPETITION = 33;
 const COMPETITION_IS_ACTIVE = true;
 
 const TRACE = false;
@@ -212,7 +218,7 @@ async function processRounds(competition, bots) {
       let timeline;
       let overview;
 
-      if (match.replay && map) {
+      if (match.replay && mapInfo) {
         try {
           const replay = await Replay.load(match.replay);
 
@@ -234,6 +240,8 @@ async function processRounds(competition, bots) {
 
           warnings = ["Failed to parse replay file."];
         }
+      } else if (!mapInfo) {
+        warnings = ["Unknown map " + map];
       } else {
         isRoundComplete = false;
         warnings = ["No replay file."];

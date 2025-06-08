@@ -31,8 +31,11 @@ const MAP_SIZE = {
   HardLead513AIE: [132, 132],
   InterloperAIE: [132, 140],
   Oceanborn513AIE: [140, 132],
+  PersephoneAIE: [124, 146],
+  PylonAIE: [132, 136],
   SiteDelta513AIE: [136, 148],
   ThunderbirdAIE: [140, 140],
+  TorchesAIE: [128, 144],
 };
 
 const IMG_SIZE = {
@@ -46,8 +49,11 @@ const IMG_SIZE = {
   HardLead513AIE: [600, 600],
   InterloperAIE: [600, 635],
   Oceanborn513AIE: [636, 600],
+  PersephoneAIE: [600, 706],
+  PylonAIE: [600, 618],
   SiteDelta513AIE: [551, 599],
   ThunderbirdAIE: [600, 600],
+  TorchesAIE: [600, 675],
 };
 
 export default function Match({ bot }) {
