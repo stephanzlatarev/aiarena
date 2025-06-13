@@ -96,7 +96,7 @@ export default function Rankings() {
         <TableCell key="5">
           <div style={{ display: "flex", alignItems: "center", minWidth: "320px" }}>
             <Army army={ one.armyBuild } />
-            <div>({ one.armyBuildWins || 0 } wins)</div>
+            <div>({ one.armyBuildWins || 0 } { (one.armyBuildWins === 1) ? "win" : "wins" })</div>
           </div>
         </TableCell>,
         <TableCell key="6"><Rating capacity={ one.militaryCapacity } performance={ one.militaryPerformance } /></TableCell>,
