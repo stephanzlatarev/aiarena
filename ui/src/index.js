@@ -9,7 +9,7 @@ import Api from "./Api";
 import Bot from "./Bot";
 import Feedback from "./Feedback";
 import Header from "./Header";
-import Match from "./Match";
+import { MatchLoader, MatchPage } from "./match/route";
 import Rankings from "./Rankings";
 import theme from "./theme";
 
@@ -50,7 +50,7 @@ const router = createBrowserRouter(createRoutesFromElements(
 
     <Route path="bot/:bot">
       <Route path=":tab?" element={ <Loader><Bot /></Loader> } loader={ ({ params }) => defer({ bot: params.bot, tab: params.tab, info: Api.get("bot/" + params.bot) }) } />
-      <Route path="match/:match" element={ <Loader><Match /></Loader> } loader={ ({ params }) => defer({ bot: params.bot, info: Api.get("match/" + params.match) }) } />
+      <Route path="match/:match" element={ <MatchPage /> } loader={ MatchLoader } />
     </Route>
 
     <Route path="*" element={ <div>How did you get here?</div> } />

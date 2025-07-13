@@ -25,7 +25,8 @@ class Api {
     try {
       this.inform("Loading...");
 
-      const response = await axios.get(API + entity);
+      const url = entity.startsWith("http") ? entity : API + entity;
+      const response = await axios.get(url);
 
       this.inform();
 

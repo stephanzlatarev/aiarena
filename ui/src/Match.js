@@ -11,31 +11,27 @@ import Army from "./Army";
 import { UnitIcon } from "./Army";
 import MatchCell from "./MatchCell";
 import Rating from "./Rating";
-import { SmallScreen } from "./screen";
+import svg from "./svg";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
-const MILITARY_COEFFICIENT = 100 / 16000;
-const ECONOMY_COEFFICIENT = 100 / 100;
-const WARRIORS = MILITARY_COEFFICIENT / 100;
-const WORKERS = ECONOMY_COEFFICIENT / 100;
 
 const MAP_SIZE = {
-  AbyssalReefAIE: [152, 136],
-  AcropolisAIE: [140, 136],
-  AutomatonAIE: [148, 148],
-  Equilibrium513AIE: [172, 116],
-  EphemeronAIE: [132, 148],
-  GoldenAura513AIE: [140, 140],
-  Gresvan513AIE: [160, 116],
-  HardLead513AIE: [132, 132],
-  InterloperAIE: [132, 140],
-  Oceanborn513AIE: [140, 132],
-  PersephoneAIE: [124, 146],
-  PylonAIE: [132, 136],
-  SiteDelta513AIE: [136, 148],
-  ThunderbirdAIE: [140, 140],
-  TorchesAIE: [128, 144],
+  AbyssalReefAIE: [0, 0, 152, 136],
+  AcropolisAIE: [0, 0, 140, 136],
+  AutomatonAIE: [0, 0, 148, 148],
+  Equilibrium513AIE: [0, 0, 172, 116],
+  EphemeronAIE: [0, 0, 132, 148],
+  GoldenAura513AIE: [0, 0, 140, 140],
+  Gresvan513AIE: [0, 0, 160, 116],
+  HardLead513AIE: [0, 0, 132, 132],
+  InterloperAIE: [0, 0, 132, 140],
+  Oceanborn513AIE: [0, 0, 140, 132],
+  PersephoneAIE: [18, 18, 124, 146],
+  PylonAIE: [58, 56, 132, 136],
+  SiteDelta513AIE: [0, 0, 136, 148],
+  ThunderbirdAIE: [0, 0, 140, 140],
+  TorchesAIE: [14, 32, 128, 144],
 };
 
 const IMG_SIZE = {
@@ -57,12 +53,13 @@ const IMG_SIZE = {
 };
 
 export default function Match({ bot }) {
-  const match = useAsyncValue();
+  const [match, summary] = useAsyncValue();
   const playerMap = createPlayerMap(bot, match);
   const ref = React.useRef(null);
   const [width, setWidth] = React.useState({ width: 0, height: 0 });
   const infos = [];
   const elements = [];
+  const highlights = [];
 
   React.useEffect(() => setWidth(ref.current ? ref.current.offsetWidth : 0), [ref.current]);
 
@@ -70,6 +67,10 @@ export default function Match({ bot }) {
     infos.push(<BotInfo key="player1-info" info={ { ...match.player1.ranking, ...match.overview.players[1] } } winner={ match.winner } />);
     infos.push(<BotInfo key="player2-info" info={ { ...match.player2.ranking, ...match.overview.players[2] } } winner={ match.winner } />);
     if (playerMap.reverse) infos.reverse();
+  }
+
+  if (summary && summary.summary && summary.summary.summary) {
+    highlights.push(<div key="description-summary">{ summary.summary.summary }</div>);
   }
 
   if (match.overview && match.overview.players[1].buildOrder && match.overview.players[2].buildOrder) {
@@ -113,6 +114,8 @@ export default function Match({ bot }) {
         <Link href={ "https://aiarena.net/matches/" + match.match } target="_blank" rel="noopener">Download replay</Link> &nbsp;
         { match.warnings.join(" ") } &nbsp;
       </div>
+
+      { highlights }
 
       <div width="100%" style={{ display: "flex", flexDirection: "row" }}>
         { infos }
@@ -244,221 +247,37 @@ function prepareBuildOrder(buildorder) {
 }
 
 function Timeline({ match, playerMap, width }) {
-  let key = 1;
+  const [mapLeft, mapTop, mapWidth, mapHeight] = MAP_SIZE[match.map];
+  const [jpgWidth, jpgHeight] = IMG_SIZE[match.map];
+  const scale = width / 660;
+  const viewWidth = (scale < 1) ? width : 660;
+  const timeline = Array.isArray(match.timeline[0]) ? match.timeline[0] : match.timeline;
 
-  const grid = [];
-  const divs = { left: [], center: [], right: [] };
-  const lines = [
-    // Military
-    { key: key++, player: 1, resource: "activeForces", coef: WARRIORS * playerMap.side1, path: [], style: { fill: "none", stroke: "red", strokeWidth: 2 } },
-    { key: key++, player: 1, resource: "activeForces", coef: WARRIORS * playerMap.side2, path: [], style: { fill: "none", stroke: "red", strokeWidth: 1, strokeDasharray: "5,5" } },
-    { key: key++, player: 2, resource: "activeForces", coef: WARRIORS * playerMap.side2, path: [], style: { fill: "none", stroke: "red", strokeWidth: 2 } },
-    { key: key++, player: 2, resource: "activeForces", coef: WARRIORS * playerMap.side1, path: [], style: { fill: "none", stroke: "red", strokeWidth: 1, strokeDasharray: "5,5" } },
-
-    // Economy
-    { key: key++, player: 1, resource: "activeWorkers", coef: WORKERS * playerMap.side1, path: [], style: { fill: "none", stroke: "green", strokeWidth: 2 } },
-    { key: key++, player: 1, resource: "activeWorkers", coef: WORKERS * playerMap.side2, path: [], style: { fill: "none", stroke: "green", strokeWidth: 1, strokeDasharray: "5,5" } },
-    { key: key++, player: 2, resource: "activeWorkers", coef: WORKERS * playerMap.side2, path: [], style: { fill: "none", stroke: "green", strokeWidth: 2 } },
-    { key: key++, player: 2, resource: "activeWorkers", coef: WORKERS * playerMap.side1, path: [], style: { fill: "none", stroke: "green", strokeWidth: 1, strokeDasharray: "5,5" } },
-  ];
-
-  const midx = width / 2;
-  const midmargin = 100;
-  const lanewidth = midx - midmargin;
-  let height = 0;
-  let minute = 0;
-  let pathop = "M";
-
-  for (const event of match.timeline) {
-    if (event.type === "stats") {
-      for (const line of lines) {
-        const value = event.players[line.player].resources[line.resource];
-
-        if (value >= 0) {
-          const x = midx + value * line.coef * lanewidth + midmargin * Math.sign(line.coef);
-          line.path.push(`${pathop}${x},${height}`);
-        }
-      }
-
-      if (event.loop > minute) {
-        grid.push(<line key={ key++ } x1="0" y1={ height } x2={ width } y2={ height } style={{ stroke: "lightGray", strokeWidth: 1 }} />);
-        divs.center.push(<div top={ height }>{ clock(minute) }</div>);
-        minute += 1344;
-      }
-
-      pathop = "L";
-      height += 4;
-    }
-
-    //TODO: Support for version 3 and 4
-    const isVersion4 = !!event.players[1].rating;
-    if ((event.type === "fight") && (!isVersion4 || event.loss)) {
-      if (isVersion4) {
-        const leftPlayer = playerMap[1];
-        const rightPlayer = playerMap[2];
-
-        if (MAP_SIZE[match.map]) {
-          divs.center.push(MapCard(height, match.map, event.players[leftPlayer], event.players[rightPlayer]));
-        }
-        divs.left.push(CombatCard(height, event.players[leftPlayer], score(event, leftPlayer)));
-        divs.right.push(CombatCard(height, event.players[rightPlayer], score(event, rightPlayer)));
-
-        pathop = "L";
-        height += SmallScreen ? 200 : 100;
-        
-      } else {
-        const leftPlayer = playerMap[1];
-        const rightPlayer = playerMap[2];
-        const color = (event.players[1].kill > event.players[2].kill) ? playerMap.color1 : playerMap.color2;
-
-        height += 16;
-
-        divs.center.push(
-          <div top={ height } style={{ color: color, fontSize: "3rem", backgroundColor: "rgba(255, 255, 255, 0.9)" }}>
-            &#9876;
-          </div>
-        );
-        divs.left.push(CombatCard(height, event.players[leftPlayer], score(event, leftPlayer)));
-        divs.right.push(CombatCard(height, event.players[rightPlayer], score(event, rightPlayer)));
-
-        pathop = "L";
-        height += 80;
+  if (playerMap.reverse) {
+    for (const point of timeline) {
+      if (point.players) {
+        const p1 = point.players[1];
+        const p2 = point.players[2];
+        point.players[1] = p2;
+        point.players[2] = p1;
       }
     }
   }
 
-  let leftSideStyle;
-  let centerSideStyle;
-  let rightSideStyle;
+  let html = svg(timeline, { name: match.map, size: { area: { left: mapLeft, top: mapTop, width: mapWidth, height: mapHeight }, image: { width: jpgWidth, height: jpgHeight } } });
 
-  if (SmallScreen) {
-    leftSideStyle = { position: "absolute", left: 0, width: "50%", display: "flex", justifyContent: "right", marginTop: "100px", marginLeft: "0" };
-    centerSideStyle = { position: "absolute", left: 0, width: "40%", display: "flex", justifyContent: "center", marginLeft: "30%", marginRight: "30%" };
-    rightSideStyle = { position: "absolute", left: 0, width: "50%", display: "flex", justifyContent: "left", marginTop: "100px", marginLeft: "50%" };
-  } else {
-    leftSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "right", marginRight: "66%" };
-    centerSideStyle = { position: "absolute", left: 0, width: "150px", display: "flex", justifyContent: "center", marginLeft: "calc(50% - 75px)", marginRight: "calc(50% - 75px)" };
-    rightSideStyle = { position: "absolute", left: 0, width: "34%", display: "flex", justifyContent: "left", marginLeft: "66%" };
+  if (scale < 1) {
+    const hindex = html.indexOf("height=");
+    const gindex = html.indexOf("<g ");
+
+    if ((hindex >= 0) && (gindex >= 0)) {
+      const height = parseInt(html.substring(hindex + 8, html.indexOf('"', hindex + 8)), 10) * scale;
+      html = `<svg width="${viewWidth}" height="${height}" xmlns="http://www.w3.org/2000/svg"><g transform="scale(${scale})"` + html.substring(gindex + 2);
+    }
   }
 
   return (
-    <div width="100%" style={{ position: "relative" }}>
-      { divs.left.map(div => (<div key={ key++ } style={{ ...leftSideStyle, top: div.props.top }}>{ div }</div>)) }
-      { divs.center.map(div => (<div key={ key++ } style={{ ...centerSideStyle, top: div.props.top }}>{ div }</div>)) }
-      { divs.right.map(div => (<div key={ key++ } style={{ ...rightSideStyle, top: div.props.top }}>{ div }</div>)) }
-
-      <svg width={ width } height={ height } xmlns="http://www.w3.org/2000/svg">
-        <line x1={ midx - midmargin } y1="0" x2={ midx - midmargin } y2={ height } style={{ stroke: "lightGray", strokeWidth: 3 }} />
-        <line x1={ midx + midmargin } y1="0" x2={ midx + midmargin } y2={ height } style={{ stroke: "lightGray", strokeWidth: 3 }} />
-        { grid }
-        { lines.map(line => (<path key={ line.key } d={ line.path.join(" ") } style={ line.style } />)) }
-      </svg>
-    </div>
-  );
-}
-
-function getMapSvgX(code, scale) {
-  return Math.floor(code * scale / 1000);
-}
-
-function getMapSvgY(code, scale) {
-  return Math.floor((code % 1000) * scale);
-}
-
-function MapCard(top, map, leftPlayer, rightPlayer) {
-  const [mapWidth, mapHeight] = MAP_SIZE[map];
-  const [jpgWidth, jpgHeight] = IMG_SIZE[map];
-
-  const svgHeight = 100;
-  const svgWidth = Math.floor(jpgWidth * svgHeight / jpgHeight);
-
-  const points = [];
-  const scaleX = jpgWidth / mapWidth;
-  const scaleY = jpgHeight / mapHeight;
-  let key = 1;
-
-  const spots = new Set();
-  const spotRadius = 12 * scaleX;
-  for (const zone of leftPlayer.zones) if (zone) spots.add(zone);
-  for (const zone of rightPlayer.zones) if (zone) spots.add(zone);
-  for (const spot of spots) {
-    points.push(
-      <circle key={ key++ } r={ spotRadius } cx={ getMapSvgX(spot, scaleX) } cy={ getMapSvgY(spot, scaleY) } fill="rgba(255, 255, 255, 0.5)" />
-    );
-  }
-
-  const baseHalfWidth = 5 * scaleX;
-  const baseHalfHeight = 5 * scaleY;
-  const leftBaseStyle = { fill: "#00AA00", strokeWidth: scaleX, stroke: "white" };
-  for (const base of leftPlayer.bases) {
-    points.push(
-      <rect key={ key++ } style={ leftBaseStyle }
-        x={ getMapSvgX(base, scaleX) - baseHalfWidth } y={ getMapSvgY(base, scaleY) - baseHalfHeight }
-        width={ baseHalfWidth + baseHalfWidth } height={ baseHalfHeight + baseHalfHeight }
-      />
-    );
-  }
-
-  const rightBaseStyle = { fill: "#AA0000", strokeWidth: scaleX, stroke: "white" };
-  for (const base of rightPlayer.bases) {
-    points.push(
-      <rect key={ key++ } style={ rightBaseStyle }
-        x={ getMapSvgX(base, scaleX) - baseHalfWidth } y={ getMapSvgY(base, scaleY) - baseHalfHeight }
-        width={ baseHalfWidth + baseHalfWidth } height={ baseHalfHeight + baseHalfHeight }
-      />
-    );
-  }
-
-  const fontSize = 20 * scaleY;
-  const fontOffsetX = -8 * scaleX;
-  const fontOffsetY = +8 * scaleX;
-  const leftPlayerOffset = -scaleX;
-  const rightPlayerOffset = +scaleX;
-  for (const zone of rightPlayer.zones) {
-    if (!zone) continue;
-    points.push(
-      <text key={ key++ } fontSize={ fontSize } fill="#00EE00" style={{ fontWeight: 600 }}
-        x={ getMapSvgX(zone, scaleX) + fontOffsetX + rightPlayerOffset } y={ getMapSvgY(zone, scaleY) + fontOffsetY }
-      >
-        &#9876;
-      </text>
-    );
-  }
-  for (const zone of leftPlayer.zones) {
-    if (!zone) continue;
-    points.push(
-      <text key={ key++ } fontSize={ fontSize } fill="#EE0000" style={{ fontWeight: 600 }}
-        x={ getMapSvgX(zone, scaleX) + fontOffsetX + leftPlayerOffset } y={ getMapSvgY(zone, scaleY) + fontOffsetY }
-      >
-        &#9876;
-      </text>
-    );
-  }
-
-  return (
-    <svg top={ top } width={ svgWidth } height={ svgHeight } viewBox={ "0 0 " + jpgWidth + " " + jpgHeight } xmlns="http://www.w3.org/2000/svg">
-      <image href={ "/map/" + map + ".jpg" } />
-      { points }
-    </svg>
-  );
-}
-
-const combatCardStyle = {
-  display: "flex", flexDirection: "column", alignItems: "center",
-  border: "solid darkGray", borderRadius: "12px", padding: "0px 12px", margin: "1px",
-  backgroundColor: "rgba(255, 255, 255, 0.9)"
-};
-
-//TODO: Support for version 3 and 4 - "fight.died || fight.losses"
-function CombatCard(top, fight, score) {
-  const died = fight.died || fight.losses;
-
-  return (
-    <div top={ top } style={ combatCardStyle }>
-      <Army army={ fight.army } />
-      <Rating capacity={ score.capacity } performance={ score.performance } />
-      <Army army={ died } loss="true" />
-    </div>
+    <div style={{ position: "relative", width: `${viewWidth}px`, margin: "auto" }}  dangerouslySetInnerHTML={{ __html: html }} />
   );
 }
 
@@ -481,20 +300,4 @@ function clock(loop) {
   }
 
   return "Unknown";
-}
-
-//TODO: Support for version 3 and 4
-function score(fight, player) {
-  if (fight.players[player].rating) {
-    return { capacity: fight.players[player].rating.militaryCapacity, performance: fight.players[player].rating.militaryPerformance };
-  } else {
-    const playerArmyValue = fight.players[player].value;
-    const playerKillValue = fight.players[player].kill;
-    const opponentArmyValue = fight.players[3 - player].value;
-    const opponentKillValue = fight.players[3 - player].kill;
-    const capacity = Math.floor(MILITARY_COEFFICIENT * playerArmyValue);
-    const performance = Math.min(Math.floor(capacity * opponentArmyValue * playerKillValue / playerArmyValue / opponentKillValue), 100);
-  
-    return { capacity, performance };
-  }
 }
