@@ -40,7 +40,7 @@ const MAP_INFO = {
   TorchesAIE: TorchesAIE,
 };
 
-const VERSION = 9;
+const VERSION = 12;
 const COMPETITION = 33;
 const COMPETITION_IS_ACTIVE = true;
 
@@ -224,7 +224,7 @@ async function processRounds(competition, bots) {
 
           side = replay.side;
           warnings = [...replay.warnings];
-          timeline = getTimeline(replay, mapInfo);
+          timeline = await getTimeline(replay, mapInfo, match);
           overview = getOverview(replay, timeline);
 
           await storeBuildOrder(match.player1, addBuildOrder(
