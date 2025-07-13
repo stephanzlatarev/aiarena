@@ -10,7 +10,7 @@ import Bot from "./Bot";
 import Feedback from "./Feedback";
 import Header from "./Header";
 import { MatchLoader, MatchPage } from "./match/route";
-import Rankings from "./Rankings";
+import { CompetitionLoader, CompetitionPage } from "./competition-ranking/route";
 import theme from "./theme";
 
 const rootElement = document.getElementById("root");
@@ -46,7 +46,7 @@ function Loader(props) {
 
 const router = createBrowserRouter(createRoutesFromElements(
   <Route path="/" element={ <Frame /> }>
-    <Route index element={ <Loader><Rankings /></Loader> } loader={ () => defer({ info: Api.get("rankings") }) } />
+    <Route index element={ <CompetitionPage /> } loader={ CompetitionLoader } />
 
     <Route path="bot/:bot">
       <Route path=":tab?" element={ <Loader><Bot /></Loader> } loader={ ({ params }) => defer({ bot: params.bot, tab: params.tab, info: Api.get("bot/" + params.bot) }) } />

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useAsyncValue } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -7,9 +7,9 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import Army from "./Army";
-import Rating from "./Rating";
-import { SmallScreen } from "./screen";
+import Army from "../Army";
+import Rating from "../Rating";
+import { SmallScreen } from "../screen";
 
 const HOUSEBOTS_AUTHOR = 133;
 
@@ -36,8 +36,8 @@ const ProBotsHeader = { border: 0, backgroundImage: "linear-gradient(white, #9fc
 const ProBotsDisqualified = { textDecoration: "line-through", textDecorationThickness: "2px", textDecorationColor: "#9fcc9f" };
 const AuthorRemoved = {     fontSize: "0.6rem", paddingLeft: "0.5rem", color: "#9fcc9f", textTransform: "uppercase", fontWeight: "bold", whiteSpace: "nowrap" };
 
-export default function Rankings() {
-  const rankings = useAsyncValue()
+export default function Rankings({ rankings }) {
+  rankings = rankings
   .map(function(one) {
     if (BOT_REMOVED.has(one.id)) one.division = 0;
     return one;
