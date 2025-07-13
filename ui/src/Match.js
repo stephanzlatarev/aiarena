@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useAsyncValue } from "react-router-dom";
 import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -52,8 +51,7 @@ const IMG_SIZE = {
   TorchesAIE: [600, 675],
 };
 
-export default function Match({ bot }) {
-  const [match, summary] = useAsyncValue();
+export default function Match({ bot, match, summary }) {
   const playerMap = createPlayerMap(bot, match);
   const ref = React.useRef(null);
   const [width, setWidth] = React.useState({ width: 0, height: 0 });
