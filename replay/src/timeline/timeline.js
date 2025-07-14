@@ -33,14 +33,14 @@ async function extractV2Timeline(file) {
   }
 }
 
-export default async function timeline(replay, map, match) {
+export default async function timeline(replay, map, match, mapName) {
   const timeline = [];
 
   const replayFile = match.replay;
   const v2timeline = await extractV2Timeline(replayFile);
 
   timeline.push(v2timeline);
-  requestSummary(match, v2timeline);
+  requestSummary(match, mapName, v2timeline);
 
   let stats = { type: "stats", loop: 0, events: [], end: STATS_LOOPS };
   let fight = { type: "fight", loop: 0, events: [], end: FIGHT_LOOPS, value: 0, loss: 0 };

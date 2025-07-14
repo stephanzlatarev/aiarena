@@ -1,6 +1,9 @@
 import https from "https";
 
-export default function(match, timeline) {
+const LOOPS_PER_SECOND = 22.4;
+const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
+
+export default function(match, map, timeline) {
   console.log("Request summary for match:", match ? match.id : "unknown", "with", timeline ? timeline.length : "no", "timeline events");
   if (!match || !timeline || !timeline.length) return;
 
@@ -35,7 +38,8 @@ export default function(match, timeline) {
   const date = new Date(match.time);
   const data = JSON.stringify({
     match: String(match.id),
-    map: match.map,
+    map: map,
+    duration: clock(match.duration),
     winner: match.winner,
     opponent: (match.winner === match.player1) ? match.player2 : match.player1,
     timeline: minutes,
@@ -97,4 +101,17 @@ function statsUnits(units) {
   }
 
   return stats;
+}
+
+function clock(loop) {
+  if (loop >= 0) {
+    const minutes = Math.floor(loop / LOOPS_PER_MINUTE);
+    const seconds = Math.floor(loop / LOOPS_PER_SECOND) % 60;
+    const mm = (minutes >= 10) ? minutes : "0" + minutes;
+    const ss = (seconds >= 10) ? seconds : "0" + seconds;
+
+    return `${mm}:${ss}`;
+  }
+
+  return "Unknown";
 }

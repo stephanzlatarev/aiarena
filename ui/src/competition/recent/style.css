@@ -14,22 +14,16 @@
   text-decoration: none;
 }
 
-.match-card-match {
-  margin-right: 2rem;
-  white-space: nowrap;
-}
-
-.match-card-time {
-  margin-right: 2rem;
-  font-style: italic;
-  white-space: nowrap;
-}
-
-.match-card-players {
+.match-card-header {
   display: inline-block;
+  margin-right: 1.5rem;
   white-space: nowrap;
 }
 
 .match-card-summary {
   margin-top: 0.5rem;
+}
+
+.italic {
+  font-style: italic;
 }
