@@ -1,0 +1,23 @@
+.match-card {
+  cursor: pointer;
+  padding: 1rem;
+  border-bottom: 1px solid #ccc;
+  transition: background 0.2s;
+}
+
+.match-card:hover {
+  background: #eee;
+}
+
+.match-card-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.match-card-match {
+  margin-right: 2rem;
+}
+
+.match-card-summary {
+  margin-top: 0.5rem;
+}
