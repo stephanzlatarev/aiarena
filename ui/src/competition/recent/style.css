@@ -16,6 +16,18 @@
 
 .match-card-match {
   margin-right: 2rem;
+  white-space: nowrap;
+}
+
+.match-card-time {
+  margin-right: 2rem;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.match-card-players {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .match-card-summary {
