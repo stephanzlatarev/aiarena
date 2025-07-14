@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import "./style.css";
 
 export default function Matches({ matches }) {
-  const rows = matches.map((match) => (<MatchCard key={ match.time } match={ match } />));
+  const rows = matches.filter((match) => (typeof(match.summary?.summary) === "string")).map((match) => (<MatchCard key={ match.time } match={ match } />));
 
   return (
     <div>
