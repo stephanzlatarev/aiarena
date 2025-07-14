@@ -1,15 +1,15 @@
 import * as React from "react";
 import { Await, defer, useLoaderData } from "react-router-dom";
-import Api from "../Api";
+import Api from "../../Api";
 import Rankings from "./Rankings";
 
-export function CompetitionLoader() {
+export function RankingsLoader() {
   return defer({
     rankings: Api.get("rankings"),
   });
 }
 
-export function CompetitionPage() {
+export function RankingsPage() {
   const data = useLoaderData();
 
   return (

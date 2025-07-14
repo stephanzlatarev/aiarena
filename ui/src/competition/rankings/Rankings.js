@@ -7,9 +7,9 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import Army from "../Army";
-import Rating from "../Rating";
-import { SmallScreen } from "../screen";
+import Army from "../../Army";
+import Rating from "../../Rating";
+import { SmallScreen } from "../../screen";
 
 const HOUSEBOTS_AUTHOR = 133;
 
