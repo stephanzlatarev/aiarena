@@ -1,4 +1,3 @@
-import SiteDelta from "../src/map/SiteDelta513AIE.js";
 import Replay from "../src/replay/replay.js";
 import timeline from "../src/timeline/timeline.js";
 import overview from "../src/timeline/overview.js";
@@ -32,10 +31,12 @@ function five(value) {
 }
 
 function show(point) {
-  if (point.type === "fight") {
+  if (Array.isArray(point)) {
+    console.log("SKIP EMBEDDED TIMELINE");
+  } else if (point.type === "fight") {
     console.log(
-        clock(point.loop), "\t",
-        JSON.stringify(point, null, 2)
+        clock(point.start), "\t",
+        JSON.stringify(point)
     );
   } else {
     let food = { '1': 0, '2': 0 };
@@ -60,7 +61,7 @@ function show(point) {
     const dots = [];
     for (let i = 0; i < losses; i++) dots.push("@");
     console.log(
-      clock(point.loop), "\t",
+      clock(point.start), "\t",
       "food:", three(food['1']), three(food['2']), "\t",
       "workers:", three(workers['1']), three(workers['2']), "\t",
       "army:", five(army['1']), five(army['2']), "\t",
@@ -73,7 +74,7 @@ function show(point) {
 async function go() {
   try {
     const replay = await Replay.load(file);
-    const points = timeline(replay, SiteDelta);
+    const points = await timeline({ id: 1, replay: file }, "SiteDelta513AIE");
 
     for (const point of points) {
       show(point);

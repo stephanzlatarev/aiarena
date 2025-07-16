@@ -34,5 +34,5 @@ function getBestArmy(timeline, pid) {
     }
   }
 
-  return best ? getArmyBuild(best.army) : [];
+  return best ? getArmyBuild(best.units) : [];
 }

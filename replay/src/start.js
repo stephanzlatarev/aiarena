@@ -224,7 +224,7 @@ async function processRounds(competition, bots) {
 
           side = replay.side;
           warnings = [...replay.warnings];
-          timeline = await getTimeline(replay, mapInfo, match, map);
+          timeline = await getTimeline(match, map);
           overview = getOverview(replay, timeline);
 
           await storeBuildOrder(match.player1, addBuildOrder(
@@ -261,7 +261,7 @@ async function processRounds(competition, bots) {
         replay: match.replay,
         warnings: warnings,
         overview: overview,
-        timeline: timeline,
+        timeline: { version: 1, list: timeline },
       });
 
       tracker.matches.push(match.id);

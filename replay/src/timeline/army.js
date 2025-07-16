@@ -82,56 +82,42 @@ const ZergArmyUnitValue = {
 const UnitValue = { ...ProtossArmyUnitValue, ...TerranArmyUnitValue, ...ZergArmyUnitValue };
 const ArmyRank = { ...rank(ProtossArmyUnitValue), ...rank(TerranArmyUnitValue), ...rank(ZergArmyUnitValue) };
 
-export function getArmyBuild(army) {
-  return Object.keys(army).sort((a, b) => (ArmyRank[a] - ArmyRank[b]));
-}
-
-export function getArmyCount(replay, start, end, pid) {
-  const army = {};
-  let ranked = 0;
-
-  for (const unit of replay.units.values()) {
-    let type = unit.type;
-    if (type.endsWith("Burrowed")) type = type.substring(0, type.length - 8);
-    if (type.endsWith("MP")) type = type.substring(0, type.length - 2);
-    if (type === "SiegeTankSieged") type = "SiegeTank";
-    if (type === "SupplyDepotLowered") type = "SupplyDepot";
-
-    const rank = ArmyRank[type];
-
-    if ((unit.owner == pid) && (unit.exit > start) && (unit.enter <= end) && (rank >= 0)) {
-      if (army[type]) {
-        army[type]++;
-      } else {
-        army[type] = 1;
-      }
-
-      ranked += rank;
-    }
+export function getArmyBuild(units) {
+  if (hasNonWorkerUnits(units)) {
+    return Object.keys(units).filter(type => (UnitValue[type] > 1)).sort((a, b) => (ArmyRank[a] - ArmyRank[b]));
+  } else {
+    return Object.keys(units).filter(type => (UnitValue[type] > 0));
   }
-
-  // Remove zero ranked units if there are ranked units
-  if (ranked) {
-    for (const type in army) {
-      if (!ArmyRank[type]) {
-        delete army[type];
-      }
-    }
-  }
-
-  return army;
 }
 
 export function getArmyValue(list, army) {
   let value = 0;
+  let workers = 0;
 
   for (let type in list) {
-    if (army[type]) {
-      value += UnitValue[type] * list[type];
+    if (UnitValue[type] === 1 && army[type]) {
+      workers += list[type].count;
+    } else if (UnitValue[type] && army[type]) {
+      value += UnitValue[type] * list[type].count;
     }
   }
 
-  return value;
+  return value ? value : workers;
+}
+
+export function getArmyDiedValue(list, army) {
+  let value = 0;
+  let workers = 0;
+
+  for (let type in list) {
+    if (UnitValue[type] === 1 && army[type]) {
+      workers += list[type].died;
+    } else if (UnitValue[type] && army[type]) {
+      value += UnitValue[type] * list[type].died;
+    }
+  }
+
+  return value ? value : workers;
 }
 
 function rank(list) {
@@ -143,4 +129,12 @@ function rank(list) {
   }
 
   return result;
+}
+
+function hasNonWorkerUnits(units) {
+  for (const type in units) {
+    if (UnitValue[type] > 1) {
+      return true;
+    }
+  }
 }

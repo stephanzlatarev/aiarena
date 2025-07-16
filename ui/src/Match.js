@@ -213,20 +213,9 @@ function Timeline(data) {
 
   React.useEffect(() => {
     async function createSvgTimeline({ match, playerMap, width }) {
-      const timeline = Array.isArray(match.timeline[0]) ? match.timeline[0] : match.timeline;
+      const timeline = match.timeline.version ? match.timeline.list : Array.isArray(match.timeline[0]) ? match.timeline[0] : match.timeline;
 
-      if (playerMap.reverse) {
-        for (const point of timeline) {
-          if (point.players) {
-            const p1 = point.players[1];
-            const p2 = point.players[2];
-            point.players[1] = p2;
-            point.players[2] = p1;
-          }
-        }
-      }
-
-      setSvgTimeline(await ReplayTimeline.from(timeline).format("svg", { map: match.map, width }).to("string"));
+      setSvgTimeline(await ReplayTimeline.from(timeline).format("svg", { map: match.map, width, reverse: playerMap.reverse }).to("string"));
     }
     createSvgTimeline(data);
   }, [data]);

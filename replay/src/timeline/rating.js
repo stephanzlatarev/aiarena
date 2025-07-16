@@ -1,3 +1,4 @@
+import { getArmyValue, getArmyDiedValue } from "./army.js";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
@@ -34,11 +35,17 @@ export function calculateMilitaryRating(fight, pid) {
   if (!fight) return { militaryPerformance: 0, militaryCapacity: 0 };
 
   const player = fight.players[pid];
-  const opponent = (pid == 1) ? fight.players[2] : fight.players[1];
-  const loss = fight.players[1].loss + fight.players[2].loss;
+  const playerValue = getArmyValue(player.units, player.units);
+  const playerLoss = getArmyDiedValue(player.units, player.units);
 
-  const capacity = MILITARY_COEFFICIENT * player.value;
-  const killLossRatio = loss ? opponent.value * opponent.loss / (player.value + 1) / (player.loss + 1) : 1;
+  const opponent = (pid == 1) ? fight.players[2] : fight.players[1];
+  const opponentValue = getArmyValue(opponent.units, opponent.units);
+  const opponentLoss = getArmyDiedValue(opponent.units, opponent.units);
+
+  const loss = playerLoss + opponentLoss;
+
+  const capacity = MILITARY_COEFFICIENT * playerValue;
+  const killLossRatio = loss ? opponentValue * opponentLoss / (playerValue + 1) / (playerLoss + 1) : 1;
   const performance = capacity * killLossRatio;
 
   return {
@@ -55,18 +62,20 @@ export function averageMilitaryRating(timeline, pid) {
   for (const fight of timeline) {
     if (fight.type === "fight") {
       const rating = calculateMilitaryRating(fight, pid);
-  
+
       if (rating.militaryCapacity > capacity) {
         capacity = rating.militaryCapacity;
       }
   
-      if (fight.loss) {
-        performanceSum += rating.militaryPerformance * fight.loss;
-        performanceCount += fight.loss;
+      const player = fight.players[pid];
+      const playerLoss = getArmyDiedValue(player.units, player.units);
+      if (playerLoss) {
+        performanceSum += rating.militaryPerformance * playerLoss;
+        performanceCount += playerLoss;
       }
     }
   }
-  
+
   const performance = performanceCount ? (performanceSum / performanceCount) : capacity;
 
   return {
