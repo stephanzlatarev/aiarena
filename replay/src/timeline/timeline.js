@@ -1,4 +1,4 @@
-import { MpqFile, Replay, getTimeline } from "@robobays/replay-timeline";
+import ReplayTimeline from "@robobays/replay-timeline";
 import { getArmyCount, getArmyValue } from "./army.js";
 import { calculateMilitaryRating } from "./rating.js";
 import Event from "../replay/event.js";
@@ -17,27 +17,11 @@ const IS_TEMPORARY = {
   MULE: true, WarpPrismPhasing: true
 };
 
-async function extractV2Timeline(file) {
-  try {
-    const mpq = await MpqFile.load(file);
-    const replay = new Replay(mpq);
-
-    for (const warning of replay.warnings) {
-      console.error(warning);
-    }
-
-    return getTimeline(replay);
-  } catch (error) {
-    console.error("Unable to extract timeline:", error.message);
-    return {};
-  }
-}
-
 export default async function timeline(replay, map, match, mapName) {
   const timeline = [];
 
   const replayFile = match.replay;
-  const v2timeline = await extractV2Timeline(replayFile);
+  const v2timeline = await ReplayTimeline.from(replayFile).json();
 
   timeline.push(v2timeline);
   requestSummary(match, mapName, v2timeline);

@@ -6,50 +6,14 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
+import ReplayTimeline from "@robobays/replay-timeline";
 import Army from "./Army";
 import { UnitIcon } from "./Army";
 import MatchCell from "./MatchCell";
 import Rating from "./Rating";
-import svg from "./svg";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
-
-const MAP_SIZE = {
-  AbyssalReefAIE: [0, 0, 152, 136],
-  AcropolisAIE: [0, 0, 140, 136],
-  AutomatonAIE: [0, 0, 148, 148],
-  Equilibrium513AIE: [0, 0, 172, 116],
-  EphemeronAIE: [0, 0, 132, 148],
-  GoldenAura513AIE: [0, 0, 140, 140],
-  Gresvan513AIE: [0, 0, 160, 116],
-  HardLead513AIE: [0, 0, 132, 132],
-  InterloperAIE: [0, 0, 132, 140],
-  Oceanborn513AIE: [0, 0, 140, 132],
-  PersephoneAIE: [18, 18, 124, 146],
-  PylonAIE: [58, 56, 132, 136],
-  SiteDelta513AIE: [0, 0, 136, 148],
-  ThunderbirdAIE: [0, 0, 140, 140],
-  TorchesAIE: [14, 32, 128, 144],
-};
-
-const IMG_SIZE = {
-  AbyssalReefAIE: [600, 536],
-  AcropolisAIE: [600, 582],
-  AutomatonAIE: [600, 600],
-  Equilibrium513AIE: [800, 540],
-  EphemeronAIE: [600, 672],
-  GoldenAura513AIE: [600, 600],
-  Gresvan513AIE: [800, 580],
-  HardLead513AIE: [600, 600],
-  InterloperAIE: [600, 635],
-  Oceanborn513AIE: [636, 600],
-  PersephoneAIE: [600, 706],
-  PylonAIE: [600, 618],
-  SiteDelta513AIE: [551, 599],
-  ThunderbirdAIE: [600, 600],
-  TorchesAIE: [600, 675],
-};
 
 export default function Match({ bot, match, summary }) {
   const playerMap = createPlayerMap(bot, match);
@@ -244,38 +208,31 @@ function prepareBuildOrder(buildorder) {
   return order;
 }
 
-function Timeline({ match, playerMap, width }) {
-  const [mapLeft, mapTop, mapWidth, mapHeight] = MAP_SIZE[match.map];
-  const [jpgWidth, jpgHeight] = IMG_SIZE[match.map];
-  const scale = width / 660;
-  const viewWidth = (scale < 1) ? width : 660;
-  const timeline = Array.isArray(match.timeline[0]) ? match.timeline[0] : match.timeline;
+function Timeline(data) {
+  const [svgTimeline, setSvgTimeline] = React.useState(null);
 
-  if (playerMap.reverse) {
-    for (const point of timeline) {
-      if (point.players) {
-        const p1 = point.players[1];
-        const p2 = point.players[2];
-        point.players[1] = p2;
-        point.players[2] = p1;
+  React.useEffect(() => {
+    async function createSvgTimeline({ match, playerMap, width }) {
+      const timeline = Array.isArray(match.timeline[0]) ? match.timeline[0] : match.timeline;
+
+      if (playerMap.reverse) {
+        for (const point of timeline) {
+          if (point.players) {
+            const p1 = point.players[1];
+            const p2 = point.players[2];
+            point.players[1] = p2;
+            point.players[2] = p1;
+          }
+        }
       }
+
+      setSvgTimeline(await ReplayTimeline.from(timeline).format("svg", { map: match.map, width }).to("string"));
     }
-  }
-
-  let html = svg(timeline, { name: match.map, size: { area: { left: mapLeft, top: mapTop, width: mapWidth, height: mapHeight }, image: { width: jpgWidth, height: jpgHeight } } });
-
-  if (scale < 1) {
-    const hindex = html.indexOf("height=");
-    const gindex = html.indexOf("<g ");
-
-    if ((hindex >= 0) && (gindex >= 0)) {
-      const height = parseInt(html.substring(hindex + 8, html.indexOf('"', hindex + 8)), 10) * scale;
-      html = `<svg width="${viewWidth}" height="${height}" xmlns="http://www.w3.org/2000/svg"><g transform="scale(${scale})"` + html.substring(gindex + 2);
-    }
-  }
+    createSvgTimeline(data);
+  }, [data]);
 
   return (
-    <div style={{ position: "relative", width: `${viewWidth}px`, margin: "auto" }}  dangerouslySetInnerHTML={{ __html: html }} />
+    <div style={{ width: "100%" }}  dangerouslySetInnerHTML={{ __html: svgTimeline }} />
   );
 }
 
