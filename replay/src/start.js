@@ -1,44 +1,9 @@
 import fs from "fs";
 import https from "https";
-import { deleteRanking, readBuildOrder, readProgress, storeBuildOrder, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
+import { deleteRanking, readProgress, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
 import Replay from "./replay/replay.js";
-import { default as getMatchBuildOrder, addBuildOrder } from "./timeline/buildorder.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
-
-import AbyssalReefAIE from "./map/AbyssalReefAIE.js";
-import AcropolisAIE from "./map/AcropolisAIE.js";
-import AutomatonAIE from "./map/AutomatonAIE.js";
-import EphemeronAIE from "./map/EphemeronAIE.js";
-import Equilibrium513AIE from "./map/Equilibrium513AIE.js";
-import GoldenAura513AIE from "./map/GoldenAura513AIE.js";
-import Gresvan513AIE from "./map/Gresvan513AIE.js";
-import HardLead513AIE from "./map/HardLead513AIE.js";
-import InterloperAIE from "./map/InterloperAIE.js";
-import Oceanborn513AIE from "./map/Oceanborn513AIE.js";
-import PersephoneAIE from "./map/PersephoneAIE.js";
-import PylonAIE from "./map/PylonAIE.js";
-import SiteDelta513AIE from "./map/SiteDelta513AIE.js";
-import ThunderbirdAIE from "./map/ThunderbirdAIE.js";
-import TorchesAIE from "./map/TorchesAIE.js";
-
-const MAP_INFO = {
-  AbyssalReefAIE: AbyssalReefAIE,
-  AcropolisAIE: AcropolisAIE,
-  AutomatonAIE: AutomatonAIE,
-  EphemeronAIE: EphemeronAIE,
-  Equilibrium513AIE: Equilibrium513AIE,
-  GoldenAura513AIE: GoldenAura513AIE,
-  Gresvan513AIE: Gresvan513AIE,
-  HardLead513AIE: HardLead513AIE,
-  InterloperAIE: InterloperAIE,
-  Oceanborn513AIE: Oceanborn513AIE,
-  PersephoneAIE: PersephoneAIE,
-  PylonAIE: PylonAIE,
-  SiteDelta513AIE: SiteDelta513AIE,
-  ThunderbirdAIE: ThunderbirdAIE,
-  TorchesAIE: TorchesAIE,
-};
 
 const VERSION = 12;
 const COMPETITION = 33;
@@ -120,12 +85,17 @@ async function go() {
   process.exit(0);
 }
 
+// Remove any trailing "_V4" modifiers of the map name.
+function getMapBaseName(name) {
+  return name.split("AIE")[0] + "AIE";
+}
+
 async function getMaps() {
   const maps = new Map();
   const list = (await call("GET", "/api/maps/?limit=1000")).results;
 
   for (const item of list) {
-    maps.set(item.id, item.name);
+    maps.set(item.id, getMapBaseName(item.name));
   }
 
   return maps;
@@ -212,13 +182,12 @@ async function processRounds(competition, bots) {
       console.log("Match:", match.id);
 
       const map = maps.get(match.map);
-      const mapInfo = MAP_INFO[map];
       let side = 0;
       let warnings;
       let timeline;
       let overview;
 
-      if (match.replay && mapInfo) {
+      if (match.replay && map) {
         try {
           const replay = await Replay.load(match.replay);
 
@@ -226,22 +195,13 @@ async function processRounds(competition, bots) {
           warnings = [...replay.warnings];
           timeline = await getTimeline(match, map);
           overview = getOverview(replay, timeline);
-
-          await storeBuildOrder(match.player1, addBuildOrder(
-            match.player1, map, botRace.get(match.player2), match.player2, match.winner,
-            await readBuildOrder(match.player1), getMatchBuildOrder(replay, mapInfo, 1)
-          ));
-          await storeBuildOrder(match.player2, addBuildOrder(
-            match.player2, map, botRace.get(match.player1), match.player1, match.winner,
-            await readBuildOrder(match.player2), getMatchBuildOrder(replay, mapInfo, 2)
-          ));
         } catch (error) {
           console.log(error.message);
 
           warnings = ["Failed to parse replay file."];
         }
-      } else if (!mapInfo) {
-        warnings = ["Unknown map " + map];
+      } else if (!map) {
+        warnings = ["Unknown map " + match.id];
       } else {
         isRoundComplete = false;
         warnings = ["No replay file."];

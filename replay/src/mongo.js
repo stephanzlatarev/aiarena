@@ -38,14 +38,6 @@ export async function storeMatch(match) {
   await (await connect("matches")).updateOne({ match: match.match }, { $set: match }, { upsert: true });
 }
 
-export async function readBuildOrder(bot) {
-  return await (await connect("buildorders")).findOne({ bot: bot });
-}
-
-export async function storeBuildOrder(bot, buildorder) {
-  await (await connect("buildorders")).updateOne({ bot: bot }, { $set: buildorder }, { upsert: true });
-}
-
 export async function storeRanking(ranking) {
   await (await connect("rankings")).updateOne({ competition: ranking.competition, bot: ranking.bot }, { $set: ranking }, { upsert: true });
 }

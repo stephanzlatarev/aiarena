@@ -144,8 +144,9 @@ function Rounds({ bot, matches, ranking, opponents }) {
   );
 }
 
-const MAP_NAMES = ["PersephoneAIE", "PylonAIE", "TorchesAIE"];
+const MAP_NAMES = ["IncorporealAIE", "PersephoneAIE", "PylonAIE", "TorchesAIE"];
 const MAP_DESCRIPTION = {
+  IncorporealAIE: "A central Xel'Naga Tower splits two central high ground pods.",
   PersephoneAIE: "A lush, green map with plenty of resources and a focus on macro play.",
   PylonAIE: "A compact map with a strong emphasis on early aggression and control.",
   TorchesAIE: "A map filled with narrow chokepoints and high ground, perfect for ambushes.",
@@ -277,7 +278,7 @@ function Sparring({ bot, matches, ranking, opponents }) {
             {
               MAP_NAMES.map(name => (
                 <TableCell key={ key++ } style={ cellStyle }>
-                  <img src={ "/map/" + name + ".jpg" } style={{ height: "100px" }} />
+                  <img src={ "https://robobays.github.io/images/map/" + name + ".jpg" } style={{ height: "100px" }} />
                 </TableCell>
               ))
             }

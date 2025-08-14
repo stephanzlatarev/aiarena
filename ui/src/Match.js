@@ -215,7 +215,9 @@ function Timeline(data) {
     async function createSvgTimeline({ match, playerMap, width }) {
       const timeline = match.timeline.version ? match.timeline.list : Array.isArray(match.timeline[0]) ? match.timeline[0] : match.timeline;
 
-      setSvgTimeline(await ReplayTimeline.from(timeline).format("svg", { map: match.map, width, reverse: playerMap.reverse }).to("string"));
+      if (timeline && Array.isArray(timeline)) {
+        setSvgTimeline(await ReplayTimeline.from(timeline).format("svg", { map: match.map, width, reverse: playerMap.reverse }).to("string"));
+      }
     }
     createSvgTimeline(data);
   }, [data]);
