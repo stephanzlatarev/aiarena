@@ -215,7 +215,7 @@ function Sparring({ bot, matches, ranking, opponents }) {
         {
           MAP_NAMES.map(map => (
             <div key={ key++ } style={{ paddingTop: "0.5rem", display: "flex" }}>
-              <div style={{ ...bg, backgroundImage: "url('/map/" + map + ".jpg')" }} />
+              <div style={{ ...bg, backgroundImage: "url('https://robobays.github.io/images/map/" + map + ".jpg')" }} />
               <div>
                 { map }
                 <br />
