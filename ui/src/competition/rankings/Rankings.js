@@ -14,8 +14,8 @@ import { SmallScreen } from "../../screen";
 const HOUSEBOTS_AUTHOR = 133;
 
 const AUTHOR_ALIAS = new Map();
-AUTHOR_ALIAS.set(1029, 698);
-AUTHOR_ALIAS.set(698, 1029);
+AUTHOR_ALIAS.set(606, 134); AUTHOR_ALIAS.set(134, 606); // TeamEris
+AUTHOR_ALIAS.set(1029, 698); AUTHOR_ALIAS.set(698, 1029); // TeamXena
 
 const BOT_REMOVED = new Set();
 BOT_REMOVED.add(680);
