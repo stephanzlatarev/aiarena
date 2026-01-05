@@ -32,8 +32,8 @@ AUTHOR_REMOVED.add(1804);
 AUTHOR_REMOVED.add(1858);
 
 const DivisionHeader = { border: 0, backgroundImage: "linear-gradient(#556cd6, white)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
-const ProBotsHeader = { border: 0, backgroundImage: "linear-gradient(white, #9fcc9f)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
-const ProBotsDisqualified = { textDecoration: "line-through", textDecorationThickness: "2px", textDecorationColor: "#9fcc9f" };
+const Top16AuthorsHeader = { border: 0, backgroundImage: "linear-gradient(white, #9fcc9f)", fontWeight: "bold", color: "white", textAlign: "center", textTransform: "uppercase" };
+const Top16Disqualified = { textDecoration: "line-through", textDecorationThickness: "2px", textDecorationColor: "#9fcc9f" };
 const AuthorRemoved = {     fontSize: "0.6rem", paddingLeft: "0.5rem", color: "#9fcc9f", textTransform: "uppercase", fontWeight: "bold", whiteSpace: "nowrap" };
 
 export default function Rankings({ rankings }) {
@@ -55,8 +55,8 @@ export default function Rankings({ rankings }) {
   let division;
   let rank = 1;
 
-  const probots = new Set();
-  let probotsCutoffShown = false;
+  const top16 = new Set();
+  let top16shown = false;
 
   for (const one of rankings) {
     if (!one.race) continue;
@@ -78,8 +78,8 @@ export default function Rankings({ rankings }) {
 
     if (!one.division) rank = null;
 
-    const botNameStyle = (!probotsCutoffShown && AUTHOR_REMOVED.has(one.user)) ? ProBotsDisqualified : {};
-    const botNameAppendix = (!probotsCutoffShown && AUTHOR_REMOVED.has(one.user)) ? (<span style={ AuthorRemoved }>Author removed</span>) : null;
+    const botNameStyle = (!top16shown && AUTHOR_REMOVED.has(one.user)) ? Top16Disqualified : {};
+    const botNameAppendix = (!top16shown && AUTHOR_REMOVED.has(one.user)) ? (<span style={ AuthorRemoved }>Author removed</span>) : null;
 
     const rowCells = [
       <TableCell key="1">{ rank }</TableCell>,
@@ -113,12 +113,12 @@ export default function Rankings({ rankings }) {
 
     if (one.division) rank++;
 
-    if (!probotsCutoffShown && (one.user !== HOUSEBOTS_AUTHOR) && !probots.has(AUTHOR_ALIAS.get(one.user)) && !AUTHOR_REMOVED.has(one.user)) {
-      probots.add(one.user);
+    if (!top16shown && (one.user !== HOUSEBOTS_AUTHOR) && !top16.has(AUTHOR_ALIAS.get(one.user)) && !AUTHOR_REMOVED.has(one.user)) {
+      top16.add(one.user);
 
-      if (probots.size === 16) {
-        rows.push(<TableRow key="probots-tournament"><TableCell colSpan={ 9 } style={ ProBotsHeader }>ProBots Tournament Cut-off</TableCell></TableRow>);
-        probotsCutoffShown = true;
+      if (top16.size === 16) {
+        rows.push(<TableRow key="top16-tournament"><TableCell colSpan={ 9 } style={ Top16AuthorsHeader }>Top 16 Bot Authors</TableCell></TableRow>);
+        top16shown = true;
       }
     }
   }
