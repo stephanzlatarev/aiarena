@@ -144,8 +144,9 @@ function Rounds({ bot, matches, ranking, opponents }) {
   );
 }
 
-const MAP_NAMES = ["LeyLinesAIE", "MagannathaAIE", "PersephoneAIE", "PylonAIE", "TorchesAIE", "UltraloveAIE"];
+const MAP_NAMES = ["IncorporealAIE", "LeyLinesAIE", "MagannathaAIE", "PersephoneAIE", "PylonAIE", "TorchesAIE", "UltraloveAIE"];
 const MAP_DESCRIPTION = {
+  IncorporealAIE: "A central Xel'Naga Tower splits two central high ground pods.",
   LeyLinesAIE: "Three paths to cross the map, all of them lead around forward bases.",
   MagannathaAIE: "Macro-oriented map, with emphasis on the innovative use of collapsible rock.",
   PersephoneAIE: "A lush, green map with plenty of resources and a focus on macro play.",

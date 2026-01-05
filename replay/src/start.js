@@ -6,7 +6,7 @@ import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
 
 const VERSION = 12;
-const COMPETITION = 34;
+const COMPETITION = 35;
 const COMPETITION_IS_ACTIVE = true;
 
 const TRACE = false;
