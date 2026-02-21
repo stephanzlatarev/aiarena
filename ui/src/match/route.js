@@ -7,7 +7,7 @@ export function MatchLoader({ params }) {
   return defer({
     bot: params.bot,
     match: Api.get("match/" + params.match),
-    summary: Api.get("https://genai.superskill.me/timeline-summary/" + params.match)
+    summary: "skip", // Api.get("https://genai.superskill.me/timeline-summary/" + params.match)
   });
 }
 
