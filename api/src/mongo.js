@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 
 const COMPETITION = 35;
-const START_ROUND = 0;
+const START_ROUND = 60;
 
 const client = new MongoClient("mongodb://mongo:27017");
 
@@ -30,7 +30,10 @@ async function connect(collection) {
 export async function getBotInfo(bot) {
   if (!bot || !bot.length) return;
 
-  const info = { bot: bot, buildorder: {}, ranking: {}, matches: [], opponents: [] };
+  const info = { bot: bot, buildorder: {}, elo: {}, ranking: {}, matches: [], opponents: [] };
+
+  const elo = await connect("elo");
+  info.elo = await elo.findOne({ competition: COMPETITION, bot: bot });
 
   const rankings = await connect("rankings");
   info.ranking = await rankings.findOne({ competition: COMPETITION, bot: bot });

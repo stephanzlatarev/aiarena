@@ -12,6 +12,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Army from "./Army";
 //import BuildOrderDecisions from "./BuildOrderDecisions";
+import BotElo from "./BotElo";
 import MatchCell from "./MatchCell";
 import { SmallScreen } from "./screen";
 import displayTime from "./time";
@@ -19,7 +20,7 @@ import displayTime from "./time";
 export default function Bot({ tab }) {
   tab = tab ? tab : "rounds";
 
-  const { bot, buildorder, matches, ranking, opponents } = useAsyncValue();
+  const { bot, buildorder, elo, matches, ranking, opponents } = useAsyncValue();
   const navigate = useNavigate();
 
   for (const match of matches) {
@@ -34,10 +35,14 @@ export default function Bot({ tab }) {
     <Paper elevation={ 3 }>
       <Tabs value={ tab } onChange={ (_, tab) => navigate("/bot/" + bot + "/" + tab) }>
         <Tab label="Rounds" value="rounds" />
+        <Tab label="Elo" value="elo" />
         <Tab label="Sparring" value="sparring" />
       </Tabs>
       <TabPanel tab={ tab } index="rounds">
         <Rounds bot={ bot } matches={ matches } ranking={ ranking } opponents={ opponents } />
+      </TabPanel>
+      <TabPanel tab={ tab } index="elo">
+        <BotElo elo={ elo } />
       </TabPanel>
       <TabPanel tab={ tab } index="sparring">
         <Sparring bot={ bot } matches={ matches } ranking={ ranking } opponents={ opponents } />

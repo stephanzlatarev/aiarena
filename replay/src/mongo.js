@@ -26,6 +26,14 @@ async function connect(collection) {
   return client.db("aiarena").collection(collection);
 }
 
+export async function readElo(competition, bot) {
+  return await (await connect("elo")).findOne({ competition, bot });
+}
+
+export async function storeElo(elo) {
+  await (await connect("elo")).updateOne({ competition: elo.competition, bot: elo.bot }, { $set: elo }, { upsert: true });
+}
+
 export async function readProgress(competition) {
   return await (await connect("progress")).findOne({ competition: competition });
 }

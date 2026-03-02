@@ -1,5 +1,6 @@
 import fs from "fs";
 import https from "https";
+import { processEloRatings } from "./elo.js";
 import { deleteRanking, readProgress, storeMatch, storeProgress, storeRanking, traverseMatches } from "./mongo.js";
 import Replay from "./replay/replay.js";
 import getOverview from "./timeline/overview.js";
@@ -70,7 +71,7 @@ async function go() {
   await call("POST", "/api/auth/login/", SECRETS);
 
   console.log(new Date().toISOString(), "Reading bots info...");
-  const bots = (await call("GET", "/api/bots/?limit=1000")).results;
+  const bots = (await call("GET", "/api/bots/?limit=2000")).results;
 
   console.log(new Date().toISOString(), "Updating rankings...");
   await processRankings(COMPETITION, bots);
@@ -80,6 +81,9 @@ async function go() {
 
   console.log(new Date().toISOString(), "Updating overviews...");
   await processOverviews(COMPETITION);
+
+  console.log(new Date().toISOString(), "Updating Elo...");
+  await processEloRatings(call, COMPETITION);
 
   console.log(new Date().toISOString(), "Done.");
   process.exit(0);
@@ -126,7 +130,7 @@ async function pickRoundsInProgress(competition, progress) {
 }
 
 async function getMatches(round) {
-  return (await call("GET", "/api/matches/?limit=1000&round=" + round)).results
+  return (await call("GET", "/api/matches/?limit=2000&round=" + round)).results
     .filter(match => (match.result && match.result.replay_file))
     .map(function(match) {
       let winner;
