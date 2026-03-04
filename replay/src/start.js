@@ -5,6 +5,7 @@ import { deleteRanking, readProgress, storeMatch, storeProgress, storeRanking, t
 import Replay from "./replay/replay.js";
 import getOverview from "./timeline/overview.js";
 import getTimeline from "./timeline/timeline.js";
+import getReview from "./timeline/summary.js";
 
 const VERSION = 12;
 const COMPETITION = 35;
@@ -190,6 +191,7 @@ async function processRounds(competition, bots) {
       let warnings;
       let timeline;
       let overview;
+      let review;
 
       if (match.replay && map) {
         try {
@@ -197,8 +199,9 @@ async function processRounds(competition, bots) {
 
           side = replay.side;
           warnings = [...replay.warnings];
-          timeline = await getTimeline(match, map);
+          timeline = await getTimeline(match);
           overview = getOverview(replay, timeline);
+          review = await getReview(match, map, timeline);
         } catch (error) {
           console.log(error.message);
 
@@ -226,6 +229,7 @@ async function processRounds(competition, bots) {
         warnings: warnings,
         overview: overview,
         timeline: { version: 1, list: timeline },
+        review: review,
       });
 
       tracker.matches.push(match.id);

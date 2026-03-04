@@ -1,9 +1,14 @@
-import https from "https";
+import fs from "fs";
+import { GoogleGenAI } from "@google/genai";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
-export default function(match, map, timeline) {
+const model = "gemini-2.5-pro";
+const gemini = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+const prompt = fs.readFileSync("./src/timeline/summary.prompt", "utf8");
+
+export default async function(match, map, timeline) {
   console.log("Request summary for match:", match ? match.id : "unknown", "with", timeline ? timeline.length : "no", "timeline events");
   if (!match || !timeline || !timeline.length) return;
 
@@ -48,40 +53,20 @@ export default function(match, map, timeline) {
     day: date.getDay(),
     random: Math.floor(Math.random() * 1000000),
   });
-
-  const options = {
-    method: "POST",
-    hostname: "genai.superskill.me",
-    path: "/timeline-summary/" + match.id,
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(data),
-    },
-    rejectUnauthorized: false,
-  };
-
-  const request = https.request(options, (response) => {
-    let body = "";
-    response.on("data", (chunk) => {
-      body += chunk;
-    });
-    response.on("end", () => {
-      console.log("Response summary:", body);
-    });
+  
+  const response = await gemini.models.generateContent({
+    model,
+    contents: [
+      { role: "model", parts: [{ text: prompt }] },
+      { role: "user", parts: [{ text: data }] },
+    ],
   });
 
-  request.on("timeout", () => {
-    console.error("Request summary timed out");
-  });
+  const summary = extractJsonResponse(response.text);
 
-  request.on("error", (e) => {
-    console.error("Request summary error:", e);
-  });
+  console.log("Summary:", JSON.stringify(summary));
 
-  console.log("Sending request summary for match:", match.id);
-
-  request.write(data);
-  request.end();
+  return summary;
 }
 
 function statsUnits(units) {
@@ -114,4 +99,29 @@ function clock(loop) {
   }
 
   return "Unknown";
+}
+
+function extractJsonResponse(text) {
+  const json = extractFromText(text, "{", 0, "}", 1);
+
+  if (json) {
+    try {
+      return JSON.parse(json);
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+
+      return { error: error.message };
+    }
+  }
+
+  return {};
+}
+
+function extractFromText(text, begin, bo, end, eo) {
+  const beginIndex = text.indexOf(begin);
+  const endIndex = text.lastIndexOf(end);
+
+  if ((beginIndex >= 0) && (endIndex > beginIndex)) {
+    return text.substring(beginIndex + bo, endIndex + eo);
+  }
 }

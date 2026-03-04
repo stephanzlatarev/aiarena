@@ -7,7 +7,6 @@ export function MatchLoader({ params }) {
   return defer({
     bot: params.bot,
     match: Api.get("match/" + params.match),
-    summary: "skip", // Api.get("https://genai.superskill.me/timeline-summary/" + params.match)
   });
 }
 
@@ -16,8 +15,8 @@ export function MatchPage() {
 
   return (
     <React.Suspense fallback={ <div>Loading info...</div> } >
-      <Await resolve={ Promise.all([data.bot, data.match, data.summary]) } errorElement={ <div>Error loading info!</div> }>
-        { ([bot, match, summary]) => (<Match bot={ bot } match={ match } summary={ summary } />) }
+      <Await resolve={ Promise.all([data.bot, data.match]) } errorElement={ <div>Error loading info!</div> }>
+        { ([bot, match]) => (<Match bot={ bot } match={ match } />) }
       </Await>
     </React.Suspense>
   );

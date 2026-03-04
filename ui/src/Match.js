@@ -15,7 +15,7 @@ import Rating from "./Rating";
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
-export default function Match({ bot, match, summary }) {
+export default function Match({ bot, match }) {
   const playerMap = createPlayerMap(bot, match);
   const ref = React.useRef(null);
   const [width, setWidth] = React.useState({ width: 0, height: 0 });
@@ -31,8 +31,8 @@ export default function Match({ bot, match, summary }) {
     if (playerMap.reverse) infos.reverse();
   }
 
-  if (summary && summary.summary && summary.summary.summary) {
-    highlights.push(<div key="description-summary">{ summary.summary.summary }</div>);
+  if (match.review && match.review.summary) {
+    highlights.push(<div key="description-summary">{ match.review.summary }</div>);
   }
 
   if (match.overview && match.overview.players[1].buildOrder && match.overview.players[2].buildOrder) {

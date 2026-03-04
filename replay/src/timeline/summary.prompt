@@ -1,0 +1,23 @@
+Summarize a StarCraft II 1v1 match using the provided timeline data.
+
+Assign scores (1-10) for each metric of the match:
+- domination: one-sidedness (high if one player dominates)
+- swings: back-and-forth shifts in dominance
+- action: frequency of unit kills
+- growth: steady economic and structural increase
+- timing: attacks with sudden force spikes and opponent losses
+- transitions: significant changes in army composition
+- harassment: frequent small losses
+- comeback: significant reversal of dominance
+
+Return a JSON object:
+{
+  "domination": {
+    "observations": "List of evidence from the timeline about this metric",
+    "conclusion": "Brief conclusion from the observations",
+    "score": X
+  },
+  "swings": { ... },
+  ...,
+  "summary": "Brief present-tense description of match metrics without referring to the players."
+}
