@@ -11,7 +11,7 @@ export default function Header() {
   const { bot, match } = useParams();
   const links = [(
     <NavLink key="home" to="/" style={ styleNavLink }>
-      AI Arena 2026 Pre-Season 1
+      AI Arena 2026 Season 1
     </NavLink>
   )];
 

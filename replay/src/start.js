@@ -8,7 +8,7 @@ import getTimeline from "./timeline/timeline.js";
 import getReview from "./timeline/summary.js";
 
 const VERSION = 12;
-const COMPETITION = 35;
+const COMPETITION = 36;
 const COMPETITION_IS_ACTIVE = true;
 
 const TRACE = false;
