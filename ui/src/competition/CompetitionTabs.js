@@ -12,9 +12,7 @@ export default function CompetitionTabs() {
     <Paper elevation={ 3 }>
       <Tabs value={ tab } onChange={ (_, tab) => navigate(tab) }>
         <Tab label="Rankings" value="/rankings" />
-        {/*
         <Tab label="Recent" value="/recent" />
-        */}
       </Tabs>
       <Outlet />
     </Paper>

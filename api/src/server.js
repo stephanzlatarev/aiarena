@@ -2,7 +2,7 @@ import bodyParser from "body-parser";
 import compression from "compression";
 import cors from "cors";
 import express from "express";
-import { getBotInfo, getMatchInfo, getRankings } from "./mongo.js";
+import { getBotInfo, getMatchInfo, getRankings, getRecentReviews } from "./mongo.js";
 
 const port = process.env.PORT || 3000;
 const app = express();
@@ -26,6 +26,10 @@ app.get("/api/match/*", async function(request, response) {
 
 app.get("/api/rankings", async function(_, response) {
   response.json(await getRankings());
+});
+
+app.get("/api/recent", async function(_, response) {
+  response.json(await getRecentReviews());
 });
 
 export const server = app.listen(port, () => {

@@ -5,7 +5,7 @@ import Matches from "./Matches";
 
 export function RecentMatchesLoader() {
   return defer({
-    matches: Api.get("https://genai.superskill.me/timeline-summary/recent"),
+    matches: Api.get("recent"),
   });
 }
 

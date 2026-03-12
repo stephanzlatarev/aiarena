@@ -17,6 +17,7 @@ async function connect(collection) {
     console.log("Match index by player1 created:", await aiarena.collection("matches").createIndex({ competition: 1, player1: 1, round: 1 }));
     console.log("Match index by player2 created:", await aiarena.collection("matches").createIndex({ competition: 1, player2: 1, round: 1 }));
     console.log("Match index by player2 created:", await aiarena.collection("matches").createIndex({ competition: 1, player1: 1, player2: 1 }));
+    console.log("Match index for reviews:", await aiarena.collection("matches").createIndex({ competition: 1, 'review.score': 1, match: -1 }));
     console.log("Rankings index by competition:", await aiarena.collection("rankings").createIndex({ competition: 1 }));
     console.log("Rankings index by competition and bot:", await aiarena.collection("rankings").createIndex({ competition: 1, bot: 1 }));
 
@@ -108,4 +109,13 @@ export async function getRankings() {
   }
 
   return list;
+}
+
+export async function getRecentReviews() {
+  const matches = await connect("matches");
+  const filter = { competition: COMPETITION, 'review.score': { $gt: 0 } };
+  const projection = { _id: 0, match: 1, time: 1, duration: 1, map: 1, player1: 1, player2: 1, 'review.title': 1, 'review.teaser': 1, 'review.score': 1 };
+  const reviews = await matches.find(filter, { projection }).sort({ match: -1 }).limit(50);
+
+  return reviews.toArray();
 }

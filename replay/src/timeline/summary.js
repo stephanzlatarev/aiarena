@@ -4,12 +4,19 @@ import { GoogleGenAI } from "@google/genai";
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
 
-const model = "gemini-2.5-pro";
-const gemini = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+const models = [
+  "gemini-3.1-flash-lite-preview",
+  "gemma-3-27b-it",
+  "gemma-3-12b-it",
+  "gemma-3-4b-it",
+  "gemma-3-2b-it",
+  "gemma-3-1b-it",
+];
+const gemini = new GoogleGenAI({ apiKey: fs.readFileSync("./secrets/GOOGLE_API_KEY", "utf8") });
 const prompt = fs.readFileSync("./src/timeline/summary.prompt", "utf8");
 
 export default async function(match, map, timeline) {
-  console.log("Request summary for match:", match ? match.id : "unknown", "with", timeline ? timeline.length : "no", "timeline events");
+  console.log("Request review for match:", match ? match.id : "unknown", "with", timeline ? timeline.length : "no", "timeline events");
   if (!match || !timeline || !timeline.length) return;
 
   const minutes = [];
@@ -53,7 +60,25 @@ export default async function(match, map, timeline) {
     day: date.getDay(),
     random: Math.floor(Math.random() * 1000000),
   });
-  
+
+  let review;
+
+  for (const model of models) {
+    try {
+      review = await getReview(model, data);
+    } catch (error) {
+      console.log(error.message);
+    }
+
+    if (review && review.summary) break;
+  }
+
+  console.log("Review:", JSON.stringify(review));
+
+  return review;
+}
+
+async function getReview(model, data) {
   const response = await gemini.models.generateContent({
     model,
     contents: [
@@ -62,11 +87,9 @@ export default async function(match, map, timeline) {
     ],
   });
 
-  const summary = extractJsonResponse(response.text);
+  const review = extractJsonResponse(response.text);
 
-  console.log("Summary:", JSON.stringify(summary));
-
-  return summary;
+  return { ...review, model };
 }
 
 function statsUnits(units) {
@@ -114,7 +137,7 @@ function extractJsonResponse(text) {
     }
   }
 
-  return {};
+  return { error: "Empty response"};
 }
 
 function extractFromText(text, begin, bo, end, eo) {

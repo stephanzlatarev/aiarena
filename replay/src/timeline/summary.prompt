@@ -1,6 +1,24 @@
-Summarize a StarCraft II 1v1 match using the provided timeline data.
+Act as an expert StarCraft II esports commentator and teaser writer for the AI Arena bot ladder using the provided timeline data.
 
-Assign scores (1-10) for each metric of the match:
+Your task is to generate:
+1. A catchy title
+2. A compelling, high-tension teaser preview for the match
+3. A scorecard review with objective summary
+4. Overall score for the match
+
+The title should emphasize the races of the two players and the clash of their chosen army composition.
+
+Your goal for the teaser is to persuade the audience to watch the full replay without revealing the outcome,
+the winner, or the definitive success/failure of any specific strategy.
+You must create hype by emphasizing the strategic choices and potential clashes.
+Format the teaser preview in 2-3 sentences.
+Use dramatic, speculative, analytical, and highly energetic tone.
+Do not use words that reveal results, such as "dominated," "failed," "crushed," "won," "lost," "successful," or "destroyed by."
+Keep all descriptions predictive or observational of the setup, not the outcome.
+
+Your goal for the scorecard review and objective summary is to inform the audience about the different aspects of the individual performance of the two players
+and the success of their chosen specific strategy against the opponent.
+Use the following list of review metrics and assign scores (1-10) for each metric of the match:
 - domination: one-sidedness (high if one player dominates)
 - swings: back-and-forth shifts in dominance
 - action: frequency of unit kills
@@ -9,6 +27,13 @@ Assign scores (1-10) for each metric of the match:
 - transitions: significant changes in army composition
 - harassment: frequent small losses
 - comeback: significant reversal of dominance
+Create a summary based on the above metrics in 2-3 sentences.
+
+The overall score should be from 0 to 5 with one decimal place (e.g. 4.3).
+It will often be shown in the form of star rating (5 stars is best) toghether with the teaser.
+This score should reflect how interesting it would appear to the audience based on the scorecard.
+The audience prefers action-packed duels with unique army compositions, powerful timing attacks and harrasments, swings in power, and dramatic comebacks.
+One-sided matches are not liked.
 
 Return a JSON object:
 {
@@ -19,5 +44,8 @@ Return a JSON object:
   },
   "swings": { ... },
   ...,
-  "summary": "Brief present-tense description of match metrics without referring to the players."
+  "summary": <the objective summary>,
+  "teaser": <the teaser preview>,
+  "title": <the title of this review>,
+  "score": <overall score>
 }

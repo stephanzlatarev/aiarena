@@ -1,0 +1,20 @@
+
+.match-review-card {
+  margin-top: 0.5rem;
+}
+
+.match-review-card-model {
+  cursor: help;
+  float: right;
+  color: #fff;
+  background: #88bb88;
+  border-radius: 12px;
+  padding: 0em 0.5em;
+  font-size: 80%;
+}
+
+.match-review-card-details {
+  margin-left: 2rem;
+  margin-right: 2rem;
+  font-size: 80%;
+}

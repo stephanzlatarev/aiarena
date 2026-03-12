@@ -11,6 +11,7 @@ import Army from "./Army";
 import { UnitIcon } from "./Army";
 import MatchCell from "./MatchCell";
 import Rating from "./Rating";
+import ReviewCard from "./match/ReviewCard";
 
 const LOOPS_PER_SECOND = 22.4;
 const LOOPS_PER_MINUTE = LOOPS_PER_SECOND * 60;
@@ -31,9 +32,7 @@ export default function Match({ bot, match }) {
     if (playerMap.reverse) infos.reverse();
   }
 
-  if (match.review && match.review.summary) {
-    highlights.push(<div key="description-summary">{ match.review.summary }</div>);
-  }
+  highlights.push(<ReviewCard key="review" review={ match.review }/>);
 
   if (match.overview && match.overview.players[1].buildOrder && match.overview.players[2].buildOrder) {
     elements.push(<h3 key="heading-buildorder">Build order</h3>);
@@ -216,7 +215,11 @@ function Timeline(data) {
       const timeline = match.timeline.version ? match.timeline.list : Array.isArray(match.timeline[0]) ? match.timeline[0] : match.timeline;
 
       if (timeline && Array.isArray(timeline)) {
-        setSvgTimeline(await ReplayTimeline.from(timeline).format("svg", { map: match.map, width, reverse: playerMap.reverse }).to("string"));
+        try {
+          setSvgTimeline(await ReplayTimeline.from(timeline).format("svg", { map: match.map, width, reverse: playerMap.reverse }).to("string"));
+        } catch (_) {
+          setSvgTimeline("Oops! Cannot visualize timeline!");
+        }
       }
     }
     createSvgTimeline(data);
