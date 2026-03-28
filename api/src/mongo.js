@@ -71,6 +71,9 @@ export async function getMatchInfo(match) {
   const matchProjection = { _id: 0, round: 1, match: 1, time: 1, map: 1, side: 1, player1: 1, player2: 1, duration: 1, winner: 1, warnings: 1, overview: 1, timeline: 1, review: 1 };
   const matchInfo = await matches.findOne({ match: Number(match) }, { projection: matchProjection });
 
+  if (!matchInfo) console.log("Bad match:", match);
+  if (!matchInfo) return;
+
   const rankings = await connect("rankings");
 
   return {
