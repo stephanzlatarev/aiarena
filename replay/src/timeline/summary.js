@@ -19,53 +19,14 @@ export default async function(match, map, timeline) {
   console.log("Request review for match:", match ? match.id : "unknown", "with", timeline ? timeline.length : "no", "timeline events");
   if (!match || !timeline || !timeline.length) return;
 
-  const minutes = [];
-  const winnerId = (match.winner === match.player1) ? "1" : "2";
-  const opponentId = (winnerId === "1") ? "2" : "1";
-
-  let statsWinner = {};
-  let statsOpponent = {};
-
-  for (const event of timeline) {
-    if (event.type === "stats") {
-      statsWinner = event.players[winnerId].resources;
-      statsOpponent = event.players[opponentId].resources;
-    } else if (event.type === "fight") {
-      minutes.push({
-        minute: minutes.length + 1,
-        winner: {
-          resources: statsWinner,
-          units: statsUnits(event.players[winnerId].units),
-        },
-        opponent: {
-          resources: statsOpponent,
-          units: statsUnits(event.players[opponentId].units),
-        },
-      });
-    }
-  }
-
-  if ((minutes.length <= 5) || (minutes.length >= 35)) return;
-
-  const date = new Date(match.time);
-  const data = JSON.stringify({
-    match: String(match.id),
-    map: map,
-    duration: clock(match.duration),
-    winner: match.winner,
-    opponent: (match.winner === match.player1) ? match.player2 : match.player1,
-    timeline: minutes,
-    version: 1,
-    time: date.getTime(),
-    day: date.getDay(),
-    random: Math.floor(Math.random() * 1000000),
-  });
+  const digest = digestTimeline(match, map, timeline);
+  if (!digest) return;
 
   let review;
 
   for (const model of models) {
     try {
-      review = await getReview(model, data);
+      review = await getReview(model, digest);
     } catch (error) {
       console.log(error.message);
     }
@@ -73,42 +34,156 @@ export default async function(match, map, timeline) {
     if (review && review.summary) break;
   }
 
-  console.log("Review:", JSON.stringify(review));
-
   return review;
 }
 
-async function getReview(model, data) {
+function digestTimeline(match, map, timeline) {
+  const lines = [];
+
+  lines.push(
+    "# Metadata",
+    "Map: " + map,
+    "Duration: " + clock(match.duration),
+    "Player 1: " + match.player1,
+    "Player 2: " + match.player2,
+    "Winner: " + match.winner,
+  );
+  lines.push("");
+
+  lines.push("# Timeline");
+  lines.push("");
+
+  let minute = 1;
+  let stats = { "1": {}, "2": {} };
+
+  for (const event of timeline) {
+    if (event.type === "stats") {
+      stats = event.players;
+    } else if (event.type === "fight") {
+      lines.push("## Minute " + minute);
+      lines.push(statsPlayer(match.player1, event.players[1], stats[1], event.players[2]));
+      lines.push(statsPlayer(match.player2, event.players[2], stats[2], event.players[1]));
+      lines.push("");
+
+      minute++;
+    }
+  }
+
+  if ((minute <= 5) || (minute >= 35)) return;
+
+  return lines.join("\r\n");
+}
+
+function statsPlayer(name, ownData, ownStats, opponentData) {
+  const lines = [];
+
+  lines.push(name + ":");
+  lines.push("  Bases: " + ownData.bases.length);
+  lines.push("  Minerals: " + ownStats.minerals);
+  lines.push("  Vespene: " + ownStats.vespene);
+  lines.push("  Supply: " + ownStats.foodMade + " (" + ownStats.foodUsed + " in use)");
+  lines.push("  Value: " + ownData.value);
+  if (ownData.outposts) {
+    lines.push("  Outpost:");
+    for (const outpost of ownData.outposts) {
+      lines.push(statsOutpost(outpost, ownData.bases, opponentData.bases));
+    }
+  }
+  lines.push("  Units:");
+  for (const type in ownData.units) {
+    lines.push(statsUnit(type, ownData.units[type]));
+  }
+  lines.push("  Lost value: " + ownData.loss);
+  for (const zone of ownData.zones) {
+    lines.push(statsLosses(zone, ownData.bases, opponentData.bases));
+  }
+
+  return lines.join("\r\n");
+}
+
+function statsUnit(type, unit) {
+  const changes = [];
+
+  if (unit.born) changes.push(unit.born + " created");
+  if (unit.died) changes.push(unit.died + " died");
+
+  const appendix = changes.length ? " (" + changes.join(", ") + ")" : "";
+
+  return `  - ${type}: ${unit.count}${appendix}`;
+}
+
+function statsLosses(zone, ownBases, enemyBases) {
+  const types = zone.types.join(", ");
+  const area = statsDistance(zone, ownBases, enemyBases);
+
+  return `  - Lost ${types} units ${area}`;
+}
+
+function statsOutpost(outpost, ownBases, enemyBases) {
+  const types = outpost.types.join(", ");
+  const area = statsDistance(outpost, ownBases, enemyBases);
+
+  return `  - Placed ${types} units ${area}`;
+}
+
+function statsDistance(zone, ownBases, enemyBases) {
+  const distanceToOwnBases = getDistance(zone, ownBases);
+  const distanceToEnemyBases = getDistance(zone, enemyBases);
+
+  if (distanceToOwnBases < distanceToEnemyBases) {
+    if (distanceToOwnBases < 15) {
+      return "very close to own bases";
+    } else if (distanceToOwnBases < 30) {
+      return "close to own bases";
+    } else if (distanceToOwnBases < 45) {
+      return "at short distance to own bases";
+    } else {
+      return "at medium distance to own bases";
+    }
+  } else {
+    if (distanceToEnemyBases < 15) {
+      return "very close to enemy bases";
+    } else if (distanceToEnemyBases < 30) {
+      return "close to enemy bases";
+    } else if (distanceToEnemyBases < 45) {
+      return "at short distance to enemy bases";
+    } else {
+      return "at medium distance to enemy bases";
+    }
+  }
+}
+
+function getDistance(zone, bases) {
+  let closest = Infinity;
+
+  for (const base of bases) {
+    const dx = (zone.x - base.x);
+    const dy = (zone.y - base.y);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < closest) {
+      closest = distance;
+    }
+  }
+
+  return closest;
+}
+
+async function getReview(model, input) {
+  const time = Date.now();
   const response = await gemini.models.generateContent({
     model,
     contents: [
       { role: "model", parts: [{ text: prompt }] },
-      { role: "user", parts: [{ text: data }] },
+      { role: "user", parts: [{ text: input }] },
     ],
   });
+  const elapsed = (Date.now() - time);
 
   const review = extractJsonResponse(response.text);
+  const tokens = response.usageMetadata.totalTokenCount;
 
-  return { ...review, model };
-}
-
-function statsUnits(units) {
-  const stats = {};
-
-  if (units) {
-    for (const type in units) {
-      const unit = units[type];
-      if (!unit) continue;
-
-      stats[type] = {
-        count: unit.count,
-        born: unit.born,
-        died: unit.died,
-      };
-    }
-  }
-
-  return stats;
+  return { ...review, model, tokens, millis: elapsed };
 }
 
 function clock(loop) {
