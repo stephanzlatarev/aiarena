@@ -14,6 +14,7 @@ import Army from "./Army";
 //import BuildOrderDecisions from "./BuildOrderDecisions";
 import BotElo from "./BotElo";
 import MatchCell from "./MatchCell";
+import Rounds from "./bot/Rounds";
 import { SmallScreen } from "./screen";
 import displayTime from "./time";
 
@@ -61,92 +62,6 @@ function TabPanel({ children, tab, index }) {
   }
 
   return null;
-}
-
-function Rounds({ bot, matches, ranking, opponents }) {
-  const cols = [];
-  const rows = [];
-  const style = { margin: "0px", padding: "1px", textAlign: "center" };
-  const bots = new Map();
-  let rounds = 0;
-  let key = 1;
-
-  for (const opponent of opponents) {
-    if ((opponent.bot !== bot) && (!SmallScreen || (opponent.division === ranking.division))) {
-      bots.set(opponent.bot, { opponent: opponent.bot, elo: opponent.elo, cells: [], count: 0, results: [], wins: 0 });
-    }
-  }
-
-  for (const match of matches) {
-    const info = bots.get(match.opponent);
-
-    if (info) {
-      rounds = Math.max(match.round, rounds);
-
-      info.count++;
-
-      if (match.winner === bot) {
-        info.wins++;
-        info.results[match.round] = 1;
-      } else {
-        info.results[match.round] = -1;
-      }
-
-      info.cells[match.round] = (
-        <TableCell key={ key++ } style={ style }>
-          <MatchCell bot={ bot } match={ match } />
-        </TableCell>
-      );
-    }
-  }
-
-  const opponentNames = [...bots.values()].filter(info => (info.count > 0)).sort((a, b) => (a.elo - b.elo)).map(info => info.opponent);
-
-  for (const opponent of opponentNames) {
-    cols.push(<TableCell key={ key++ } style={{ ...style, writingMode: "vertical-lr", textOrientation: "sideways", textAlign: "right", paddingBottom: "0.5rem" }}>{ opponent }</TableCell>);
-  }
-
-  for (let i = rounds - 1; i >= 0; i--) {
-    const round = i + 1;
-    const opponentCols = [];
-    let hasOpponentsInThisRound = false;
-
-    for (const opponent of opponentNames) {
-      const info = bots.get(opponent);
-
-      if (info && info.cells[round]) {
-        opponentCols.push(info.cells[round]);
-        hasOpponentsInThisRound = true;
-      } else {
-        opponentCols.push(<TableCell key={ key++ }></TableCell>);
-      }
-    }
-
-    if (hasOpponentsInThisRound) {
-      rows.push(
-        <TableRow key={ key++ }>
-          <TableCell style={ style }>{ round }</TableCell>
-          { opponentCols }
-        </TableRow>
-      );
-    }
-  }
-
-  return (
-    <TableContainer component={ Paper }>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell style={ style }>Round</TableCell>
-            { cols }
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          { rows }
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
 }
 
 const MAP_NAMES = ["IncorporealAIE", "LeyLinesAIE", "MagannathaAIE", "PersephoneAIE", "PylonAIE", "TorchesAIE", "UltraloveAIE"];
