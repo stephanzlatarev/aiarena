@@ -103,6 +103,8 @@ spec:
       labels:
         module: aiarena-api
     spec:
+      nodeSelector:
+        doks.digitalocean.com/node-pool: storage
       containers:
         - name: aiarena-api
           image: docker.io/stephanzlatarev/aiarena-api
@@ -126,6 +128,8 @@ spec:
       labels:
         module: aiarena-ui
     spec:
+      nodeSelector:
+        doks.digitalocean.com/node-pool: storage
       containers:
         - name: aiarena-ui
           image: docker.io/stephanzlatarev/aiarena-ui
@@ -151,6 +155,8 @@ spec:
       ttlSecondsAfterFinished: 600
       template:
         spec:
+          nodeSelector:
+            doks.digitalocean.com/node-pool: workers
           restartPolicy: Never
           containers:
             - name: replay
@@ -184,6 +190,8 @@ spec:
       labels:
         module: mongo
     spec:
+      nodeSelector:
+        doks.digitalocean.com/node-pool: storage
       containers:
         - name: mongo
           image: mongo:7
@@ -193,17 +201,10 @@ spec:
           volumeMounts:
             - name: mongo
               mountPath: /data/db
-  volumeClaimTemplates:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: mongo
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 200Gi
-        storageClassName: do-block-storage
+      volumes:
+        - name: mongo
+          hostPath:
+            path: /var/lib/aiarena/mongo
+            type: Directory
 
 ---
